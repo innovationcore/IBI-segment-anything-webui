@@ -72,5 +72,6 @@ RUN npm install
 RUN npm install form-data
 RUN npm i
 
-ADD run_server.sh /opt/IBI-segment-anything-webui/
+WORKDIR /opt/IBI-segment-anything-webui
+COPY run_server.sh run_server.sh
 CMD /opt/IBI-segment-anything-webui/run_server.sh
