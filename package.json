@@ -15,6 +15,7 @@
     "autoprefixer": "10.4.14",
     "eslint": "8.37.0",
     "eslint-config-next": "13.3.0",
+    "form-data": "^4.0.0",
     "formidable": "^3.2.5",
     "next": "13.3.0",
     "postcss": "8.4.21",
@@ -25,5 +26,18 @@
   },
   "devDependencies": {
     "@types/formidable": "^2.0.5"
-  }
+  },
+  "description": "![demo](./assets/demo.gif)",
+  "main": "next.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/innovationcore/IBI-segment-anything-webui.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/innovationcore/IBI-segment-anything-webui/issues"
+  },
+  "homepage": "https://github.com/innovationcore/IBI-segment-anything-webui#readme"
 }

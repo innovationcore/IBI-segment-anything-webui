@@ -360,7 +360,7 @@ function Workspace() {
             >
               <p className="text-sm text-gray-400 md:visible sm:invisible">Drag and drop your image here</p>
               <p className="text-sm text-gray-400">or</p>
-              <button
+              <button //this would be a good place to put an image converter that changes DICOM to png. This can be done using pngjs
                 className="transition-all false max-h-[40px] my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 false false"
                 onClick={() => {
                   const input = document.createElement('input')

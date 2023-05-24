@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import * as utils from '../../../IBI-SAM-Feature-Testing/src/utils';
+import * as utils from '../../../IBI-segment-anything-webui/src/utils';
 
 
 export type Point = { x: number, y: number, label: number }
