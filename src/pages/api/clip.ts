@@ -2,7 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import formidable from "formidable";
 import { promises as fs } from 'fs';
-import * as utils from '@/utils';
+import * as utils from '../../../../IBI-SAM-Feature-Testing/src/utils';
 
 export const config = {
     api: {
@@ -15,7 +15,7 @@ export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse<Response>) {
     fs.mkdir('./tmp/', { recursive: true })
-    const form = formidable({ uploadDir: './tmp/', maxTotalFileSize: 1024 * 1024 })
+    const form = formidable({ uploadDir: './tmp/', maxTotalFileSize: 2048 * 2048 })
     const { fields, files } =
         await new Promise<{ fields: formidable.Fields; files: formidable.Files; }>((resolve, reject) => {
             form.parse(req, async function (err, fields, files) {

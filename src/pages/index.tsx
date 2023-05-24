@@ -1,7 +1,8 @@
 import Head from 'next/head'
 import { useState, useEffect, useRef } from 'react'
-import { InteractiveSegment, Point, Mask, Data }
+import { InteractiveSegment, Point, Mask, Data}
   from '../components/interactive_segment'
+import {any} from "prop-types";
 
 const uiBasiclClassName = 'transition-all my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 ';
 const uiActiveClassName = 'bg-blue-500 text-white';
@@ -165,6 +166,7 @@ function Workspace() {
     })
   }
 
+  var lastPoint : any = null
 
   return (
     <div className="flex items-stretch justify-center flex-1 stage min-h-fit">
@@ -276,6 +278,30 @@ function Workspace() {
                   setMode('click')
                 }} >
                 Clean All
+              </button>
+            </div>
+            <div className={uiBasiclClassName}>
+              <p>Corrections</p>
+              <button
+                  className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
+                  onClick={() => {
+                    lastPoint = points.at(-1)
+                    console.log('Last Point: ' + lastPoint)
+                    points.pop()
+                    setPoints(points)
+                    console.log(points)
+                  }} >
+                Undo Click
+              </button>
+              <button
+                  className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
+                  onClick={() => {
+                  if (lastPoint !== null) {
+                    points.push(lastPoint)
+                    console.log(points)
+                  }
+                  }} >
+                Redo Click
               </button>
             </div>
           </div>

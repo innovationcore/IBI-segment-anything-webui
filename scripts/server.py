@@ -3,7 +3,7 @@ import click
 import torch
 import numpy as np
 import uvicorn
-import clip
+import clip #ensure you are installing the CLIP.git not the clip package
 
 from fastapi import FastAPI, File, Form
 from pydantic import BaseModel

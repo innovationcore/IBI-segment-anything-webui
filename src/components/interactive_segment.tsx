@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import * as utils from '@/utils';
+import * as utils from '../../../IBI-SAM-Feature-Testing/src/utils';
 
 
 export type Point = { x: number, y: number, label: number }
@@ -21,7 +21,7 @@ export function InteractiveSegment(
         }) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const [scale, setScale] = useState<number>(1)
-    const [maskAreaThreshold, setMaskAreaThreshold] = useState<number>(0.5)
+    const [maskAreaThreshold, setMaskAreaThreshold] = useState<number>(0.1)
     const { width, height, img } = data
     const [segments, setSegments] = useState<number[][][]>([])
     const [showSegment, setShowSegment] = useState<boolean>(true)
@@ -144,10 +144,20 @@ export function InteractiveSegment(
     return (
         <div
             tabIndex={0}
-            onKeyDown={(e) => { if (e.ctrlKey) { setShowSegment(false) } }}
+            onKeyDown={(e) => {
+                if (e.altKey) { setShowSegment(false) } //altKey is a boolean built into React
+            }}
+
             onKeyUpCapture={(e) => {
-                if (e.code === 'ControlLeft' || e.code === 'ControlRight') {
+                if (e.code === 'AltRight') { //changed from ControlLeft || ControlRight so we can do Control+Z later, left out the left alt functionality since it already opens something in web browsers
                     setShowSegment(true)
+                    console.log('Right Alt Pressed!')
+                }
+            }}
+
+            onKeyDownCapture={(e) => {
+                if (e.code === 'z') {
+                    console.log('z pressed!')
                 }
             }}
         >
@@ -168,7 +178,7 @@ export function InteractiveSegment(
                     </span>
                 </label>
                 <label className="inline-block text-sm font-medium text-gray-700">
-                    Show Mask (Ctrl to change):
+                    Show Mask (Right Alt to change):
                     <input
                         type="checkbox"
                         checked={showSegment}
@@ -177,6 +187,7 @@ export function InteractiveSegment(
                     />
                 </label>
             </div>
+
             <canvas
                 className="w-full" ref={canvasRef} width={width} height={height}
                 onContextMenu={(e) => {
