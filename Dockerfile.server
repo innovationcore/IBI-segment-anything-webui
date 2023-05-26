@@ -13,5 +13,5 @@ RUN pip install git+https://github.com/openai/CLIP.git
 
 RUN pip install -r scripts/requirements.txt
 
-CMD['python3', 'scripts/server.py']
+CMD ["python3" ,"scripts/server.py"]
 EXPOSE 8000

@@ -2,7 +2,7 @@
 
 FROM nikolaik/python-nodejs:python3.11-nodejs18
 WORKDIR /app
-COPY . .
+COPY .. .
 RUN npm i
 RUN npm run build
 
