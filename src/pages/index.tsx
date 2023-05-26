@@ -256,6 +256,39 @@ function Workspace() {
                   </button>
                 </div>
               )}
+                            {masks.length > 0 && (
+                <div className={uiBasiclClassName}>
+                  <p>Clicks/Points</p>
+                  <button
+                    className={uiBasiclClassName}
+                    onClick={(e) => {
+                      var datastr = "data:text/json;charset=utf-8," + encodeURIComponent(
+                        JSON.stringify({
+                          points: points,
+                        }));
+                      var downloadAnchorNode = document.createElement('a');
+                      downloadAnchorNode.setAttribute("href", datastr);
+                      downloadAnchorNode.setAttribute("download", "masks.json");
+                      document.body.appendChild(downloadAnchorNode); // required for firefox
+                      downloadAnchorNode.click();
+                      downloadAnchorNode.remove();
+                    }}
+                  >
+                    Download Points
+                  </button>
+                  <button
+                    className={uiBasiclClassName}
+                    onClick={(e) => {
+                      navigator.clipboard.writeText(JSON.stringify({
+                        points: points,
+                      }))
+                      Popup('Copied', 1000)
+                    }}
+                  >
+                    Copy Points
+                  </button>
+                </div>
+              )}
             </div>
             <div className={uiBasiclClassName}>
               <p>Interactive Setting</p>
