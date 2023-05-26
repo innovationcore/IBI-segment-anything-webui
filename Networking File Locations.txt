@@ -1,0 +1,9 @@
+docker-compose.yml
+- includes references for the port numbers of backend and frontend
+
+.env.local
+- this file is supposed to allow for changing the connection point off of local host
+
+config.ts
+- has a configuration for the API url
+
