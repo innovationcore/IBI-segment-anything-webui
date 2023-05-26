@@ -28,6 +28,7 @@ function Workspace() {
   const [processing, setProcessing] = useState<boolean>(false)
   const [ready, setBoxReady] = useState<boolean>(false)
   const controller = useRef<AbortController | null>()
+  const [filename, setFilename] = useState('');
 
   useEffect(() => {
     if (!data) return
@@ -166,8 +167,6 @@ function Workspace() {
     })
   }
 
-  var lastPoint : any = null
-
   return (
     <div className="flex items-stretch justify-center flex-1 stage min-h-fit">
       <section className="flex-col hidden min-w-[225px] w-1/5 py-5 overflow-y-auto md:flex lg:w-72">
@@ -223,7 +222,7 @@ function Workspace() {
               </div>
               {masks.length > 0 && (
                 <div className={uiBasiclClassName}>
-                  <p>Segment</p>
+                  <p>Segments and Clicks</p>
                   <button
                     className={uiBasiclClassName}
                     onClick={(e) => {
@@ -234,13 +233,13 @@ function Workspace() {
                         }));
                       var downloadAnchorNode = document.createElement('a');
                       downloadAnchorNode.setAttribute("href", datastr);
-                      downloadAnchorNode.setAttribute("download", "masks.json");
+                      downloadAnchorNode.setAttribute("download", filename.split('.')[0]+"+masks+points.json");
                       document.body.appendChild(downloadAnchorNode); // required for firefox
                       downloadAnchorNode.click();
                       downloadAnchorNode.remove();
                     }}
                   >
-                    Download Result
+                    Download Combined Result
                   </button>
                   <button
                     className={uiBasiclClassName}
@@ -252,13 +251,8 @@ function Workspace() {
                       Popup('Copied', 1000)
                     }}
                   >
-                    Copy Result
+                    Copy Combined Result
                   </button>
-                </div>
-              )}
-                            {masks.length > 0 && (
-                <div className={uiBasiclClassName}>
-                  <p>Clicks/Points</p>
                   <button
                     className={uiBasiclClassName}
                     onClick={(e) => {
@@ -268,7 +262,7 @@ function Workspace() {
                         }));
                       var downloadAnchorNode = document.createElement('a');
                       downloadAnchorNode.setAttribute("href", datastr);
-                      downloadAnchorNode.setAttribute("download", "masks.json");
+                      downloadAnchorNode.setAttribute("download", filename.split('.')[0]+"+points.json");
                       document.body.appendChild(downloadAnchorNode); // required for firefox
                       downloadAnchorNode.click();
                       downloadAnchorNode.remove();
@@ -286,6 +280,34 @@ function Workspace() {
                     }}
                   >
                     Copy Points
+                  </button>
+                                    <button
+                    className={uiBasiclClassName}
+                    onClick={(e) => {
+                      var datastr = "data:text/json;charset=utf-8," + encodeURIComponent(
+                        JSON.stringify({
+                          masks: masks,
+                        }));
+                      var downloadAnchorNode = document.createElement('a');
+                      downloadAnchorNode.setAttribute("href", datastr);
+                      downloadAnchorNode.setAttribute("download", filename.split('.')[0]+"+masks.json");
+                      document.body.appendChild(downloadAnchorNode); // required for firefox
+                      downloadAnchorNode.click();
+                      downloadAnchorNode.remove();
+                    }}
+                  >
+                    Download Masks
+                  </button>
+                  <button
+                    className={uiBasiclClassName}
+                    onClick={(e) => {
+                      navigator.clipboard.writeText(JSON.stringify({
+                        masks: masks,
+                      }))
+                      Popup('Copied', 1000)
+                    }}
+                  >
+                    Copy Masks
                   </button>
                 </div>
               )}
@@ -354,6 +376,8 @@ function Workspace() {
                 e.preventDefault()
                 const file = e.dataTransfer.files[0]
                 if (file) {
+                  setFilename(file.name)
+                  console.log(file.name)
                   const img = new Image()
                   img.src = URL.createObjectURL(file)
                   img.onload = () => {
@@ -378,6 +402,8 @@ function Workspace() {
                   input.onchange = (e) => {
                     const file = (e.target as HTMLInputElement).files?.[0]
                     if (file) {
+                      setFilename(file.name)
+                      console.log(file.name)
                       const img = new Image()
                       img.src = URL.createObjectURL(file)
                       img.onload = () => {
