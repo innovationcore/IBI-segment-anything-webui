@@ -1,4 +1,5 @@
-FROM nvcr.io/nvidia/pytorch:22.12-py3
+#FROM nvcr.io/nvidia/pytorch:22.12-py3
+FROM nikolaik/python-nodejs:python3.11-nodejs18
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN pip3 install --upgrade pip
@@ -73,4 +74,5 @@ RUN npm install form-data
 RUN npm i
 
 ADD run_server.sh /opt/IBI-segment-anything-webui
+CMD /opt/IBI-segment-anything-webui/run_server.sh
 # CMD sed -i -e 's/\r$//' /opt/IBI-segment-anything-webui/run_server.sh

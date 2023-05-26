@@ -2,7 +2,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import formidable from "formidable";
 import { promises as fs } from 'fs';
-import FormData from 'form-data';
 import * as utils from '../../../../IBI-segment-anything-webui/src/utils';
 
 export const config = {
