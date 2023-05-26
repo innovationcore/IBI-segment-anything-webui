@@ -59,7 +59,8 @@ def retrieve(
         probs = (100.0 * image_features @ text_features.T)
     return probs[:, 0].softmax(dim=-1)
 
-
+# Here we can change the used model, so as we create our own or if we wish to switch to one of the other three models,
+# this is where we can do it.
 @click.command()
 @click.option('--model',
               default='vit_b',

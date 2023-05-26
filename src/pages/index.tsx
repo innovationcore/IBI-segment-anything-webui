@@ -280,30 +280,6 @@ function Workspace() {
                 Clean All
               </button>
             </div>
-            <div className={uiBasiclClassName}>
-              <p>Corrections</p>
-              <button
-                  className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
-                  onClick={() => {
-                    lastPoint = points.at(-1)
-                    console.log('Last Point: ' + lastPoint)
-                    points.pop()
-                    setPoints(points)
-                    console.log(points)
-                  }} >
-                Undo Click
-              </button>
-              <button
-                  className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
-                  onClick={() => {
-                  if (lastPoint !== null) {
-                    points.push(lastPoint)
-                    console.log(points)
-                  }
-                  }} >
-                Redo Click
-              </button>
-            </div>
           </div>
         </div>
       </section >
