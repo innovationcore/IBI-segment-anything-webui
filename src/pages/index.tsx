@@ -167,6 +167,9 @@ function Workspace() {
     })
   }
 
+  let pointCheckpoint = Object.assign([], points)
+  let maskCheckpoint = Object.assign([], masks)
+
   return (
     <div className="flex items-stretch justify-center flex-1 stage min-h-fit">
       <section className="flex-col hidden min-w-[225px] w-1/5 py-5 overflow-y-auto md:flex lg:w-72">
@@ -281,7 +284,7 @@ function Workspace() {
                   >
                     Copy Points
                   </button>
-                                    <button
+                  <button
                     className={uiBasiclClassName}
                     onClick={(e) => {
                       var datastr = "data:text/json;charset=utf-8," + encodeURIComponent(
@@ -335,6 +338,33 @@ function Workspace() {
                 Clean All
               </button>
             </div>
+            {maskCheckpoint.length > 0 && (
+            <div className={uiBasiclClassName}>
+              <p>Corrections</p>
+              <button
+                className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
+                onClick={() => {
+                  if (points.length === 0) return
+                  pointCheckpoint = Object.assign([], points)
+                  maskCheckpoint = Object.assign([], masks)
+                  points.pop()
+                  masks.pop()
+                  setPoints(points)
+                  setMasks(masks)
+                }} >
+                Undo Last Segment
+              </button>
+              <button
+                className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
+                onClick={() => {
+                  if (pointCheckpoint === []) return
+                  setPoints(pointCheckpoint)
+                  setMasks(maskCheckpoint)
+                }} >
+                Redo Last Segment
+              </button>
+            </div>
+            )}
           </div>
         </div>
       </section >
