@@ -18,7 +18,6 @@ function Popup(text: string, timeout: number = 1000) {
   }, timeout)
 }
 
-
 function Workspace() {
   const [data, setData] = useState<Data | null>(null)
   const [mode, setMode] = useState<'click' | 'box' | 'everything'>('click')
@@ -29,6 +28,8 @@ function Workspace() {
   const [ready, setBoxReady] = useState<boolean>(false)
   const controller = useRef<AbortController | null>()
   const [filename, setFilename] = useState('');
+  const [imgx, setImageX] = (null);
+  const [imgy, setImageY] = (null);
 
   useEffect(() => {
     if (!data) return
@@ -41,6 +42,8 @@ function Workspace() {
           y: Math.round(p.y)
         }
       })
+      // alert(JSON.stringify(points_list))
+      //let points_list = [{"x":1132,"y":1597}]
       const points_labels = points.map((p) => p.label)
       fromData.append('points', JSON.stringify(
         { points: points_list, points_labels }
@@ -281,7 +284,7 @@ function Workspace() {
                   >
                     Copy Points
                   </button>
-                                    <button
+                  <button
                     className={uiBasiclClassName}
                     onClick={(e) => {
                       var datastr = "data:text/json;charset=utf-8," + encodeURIComponent(
@@ -296,7 +299,7 @@ function Workspace() {
                       downloadAnchorNode.remove();
                     }}
                   >
-                    Download Masks
+                    Download Masks (JSON)
                   </button>
                   <button
                     className={uiBasiclClassName}
@@ -307,7 +310,15 @@ function Workspace() {
                       Popup('Copied', 1000)
                     }}
                   >
-                    Copy Masks
+                    Copy Masks (JSON)
+                  </button>
+                  <button
+                    className={uiBasiclClassName}
+                    onClick={(e) => {
+
+                    }}
+                  >
+                    Download Overlay
                   </button>
                 </div>
               )}
@@ -381,6 +392,8 @@ function Workspace() {
                   const img = new Image()
                   img.src = URL.createObjectURL(file)
                   img.onload = () => {
+                    setImageX(img.width)
+                    setImageY(img.height)
                     setData({
                       width: img.width,
                       height: img.height,
