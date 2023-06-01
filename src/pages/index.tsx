@@ -3,6 +3,9 @@ import { useState, useEffect, useRef } from 'react'
 import { InteractiveSegment, Point, Mask, Data}
   from '../components/interactive_segment'
 import {any} from "prop-types";
+import Jimp from "jimp";
+import * as fs from "fs";
+import {from} from "form-data";
 
 const uiBasiclClassName = 'transition-all my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 ';
 const uiActiveClassName = 'bg-blue-500 text-white';
@@ -28,8 +31,8 @@ function Workspace() {
   const [ready, setBoxReady] = useState<boolean>(false)
   const controller = useRef<AbortController | null>()
   const [filename, setFilename] = useState('');
-  const [imgx, setImageX] = (null);
-  const [imgy, setImageY] = (null);
+  const [imgx, setImageX] = useState();
+  const [imgy, setImageY] = useState();
 
   useEffect(() => {
     if (!data) return
@@ -166,6 +169,52 @@ function Workspace() {
           return mask
         })
         setMasks(maskData)
+      }
+    })
+  }
+
+  const handleDownload = () => {
+    if (!data) return
+    const fromData = new FormData()
+    fromData.append('file', new File([data.file], 'image.png'))
+    fromData.append('filename', JSON.stringify({
+      file_name: filename.split('.')[0]+"+overlay.png"
+    }))
+    fromData.append('dimensions', JSON.stringify({
+          x_dim: imgx,
+          y_dim: imgy,
+        }))
+    const points_list = points.map((p) => {
+        return {
+          x: Math.round(p.x),
+          y: Math.round(p.y)
+        }
+      })
+    const points_labels = points.map((p) => p.label)
+      fromData.append('points', JSON.stringify(
+        { points: points_list, points_labels }
+      ))
+
+    controller.current?.abort()
+    controller.current = new AbortController()
+    setProcessing(true)
+    fetch('/api/download', {
+      method: 'POST',
+      body: fromData,
+      signal: controller.current?.signal
+    }).then((res) => {
+      setProcessing(false)
+      return res.json()
+    }).then((res) => {
+      if (res.code == 0) {
+        //get base64 image from json
+        const encoded = res.map.data((overlay: any) => {
+          return overlay
+        })
+
+        //Create buffer from base64 string of image
+        const buffer = Buffer.from(encoded, 'base64')
+
       }
     })
   }

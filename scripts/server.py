@@ -5,14 +5,17 @@ import numpy as np
 import uvicorn
 import clip #ensure you are installing the CLIP.git not the clip package
 import re
+import base64
 
 from fastapi import FastAPI, File, Form
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Sequence, Callable
 from segment_anything import SamPredictor, SamAutomaticMaskGenerator, sam_model_registry
 from PIL import Image
 from typing_extensions import Annotated
 from threading import Lock
+from io import BytesIO
 
 
 class Point(BaseModel):
@@ -89,6 +92,9 @@ def main(
 
     app = FastAPI()
 
+    app.mount("overlays/", StaticFiles(directory='overlays'), name='overlays')
+
+
     @app.get('/')
     def index():
         return {"code": 0, "data": "Hello World"}
@@ -105,7 +111,7 @@ def main(
         return compressed
 
 
-    def generate_overlay(compressed, imgx, imgy):
+    def generate_overlay(compressed, imgx, imgy, filename):
         counts = []
         values = []
         splits = re.split('(T F)', compressed)
@@ -125,11 +131,33 @@ def main(
                     pixel_color.append(False) #white
             i+=1
 
-        output = Image.fromarray(pixel_color.reshape((imgx, imgy)).astype('uint8')*255)
-        output.save('output.png') #fix to open file explorer
+        overlay = Image.fromarray(pixel_color.reshape((imgx, imgy)).astype('uint8')*255)
+        overlay.save('overlays/'+filename)
 
+    @app.post('/api/download')
+    async def api_points(
+            file: Annotated[bytes, File()],
+            filename: Annotated[str, Form(...)],
+            points: Annotated[str, Form(...)],
+            imgx: Annotated[int, Form(...)],
+            imgy: Annotated[int, Form(...)],
+    ):
+        ps = Points.parse_raw(points)
+        input_points = np.array([[p.x, p.y] for p in ps.points])
+        input_labels = np.array(ps.points_labels)
+        image_data = Image.open(io.BytesIO(file))
+        image_data = np.array(image_data)
+        with model_lock:
+            predictor.set_image(image_data)
+            masks, scores, logits = predictor.predict(
+                point_coords=input_points,
+                point_labels=input_labels,
+                multimask_output=True,
+            )
+            predictor.reset_image()
 
-
+            generate_overlay(compress_mask(np.array(masks)), imgx, imgy, filename)
+        return {"code": 0}
 
     @app.post('/api/point')
     async def api_points(
@@ -222,40 +250,6 @@ def main(
         for mask in masks:
             mask['segmentation'] = compress_mask(mask['segmentation'])
         return {"code": 0, "data": masks[:]}
-
-    @app.post('/api/download')
-    async def api_points(
-            file: Annotated[bytes, File()],
-            points: Annotated[str, Form(...)],
-            imgx: Annotated[int, Form(...)],
-            imgy: Annotated[int, Form(...)],
-    ):
-        ps = Points.parse_raw(points)
-        input_points = np.array([[p.x, p.y] for p in ps.points])
-        input_labels = np.array(ps.points_labels)
-        image_data = Image.open(io.BytesIO(file))
-        image_data = np.array(image_data)
-        with model_lock:
-            predictor.set_image(image_data)
-            masks, scores, logits = predictor.predict(
-                point_coords=input_points,
-                point_labels=input_labels,
-                multimask_output=True,
-            )
-            predictor.reset_image()
-
-            generate_overlay(compress_mask(np.array(masks)), imgx, imgy)
-            '''masks = [
-            {
-                "segmentation": compress_mask(np.array(mask)),
-                "stability_score": float(scores[idx]),
-                "bbox": [0, 0, 0, 0],
-                "area": np.sum(mask).item(),
-            }
-            for idx, mask in enumerate(masks)
-        ]
-        masks = sorted(masks, key=lambda x: x['stability_score'], reverse=True)
-        return {"code": 0, "data": masks[:]}'''
 
     uvicorn.run(app, host=host, port=port)
 
