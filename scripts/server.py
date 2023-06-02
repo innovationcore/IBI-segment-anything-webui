@@ -5,7 +5,7 @@ import numpy as np
 import uvicorn
 import clip #ensure you are installing the CLIP.git not the clip package
 import re
-import base64
+import json
 
 from fastapi import FastAPI, File, Form
 from fastapi.staticfiles import StaticFiles
@@ -92,9 +92,6 @@ def main(
 
     app = FastAPI()
 
-    app.mount("overlays/", StaticFiles(directory='overlays'), name='overlays')
-
-
     @app.get('/')
     def index():
         return {"code": 0, "data": "Hello World"}
@@ -110,37 +107,42 @@ def main(
             [f"{c}{'T' if v else 'F'}" for c, v in zip(counts, values)])
         return compressed
 
-
     def generate_overlay(compressed, imgx, imgy, filename):
         counts = []
         values = []
-        splits = re.split('(T F)', compressed)
+        splits = re.split('(T|F)', compressed)
+        # print(splits)
         pixel_color = []
 
         for each in splits:
-            if (each == 'T' | each == 'F'):
-                values.append(each)
-            else:
+            if each == 'T':
+                values.append('T')
+            elif each == 'F':
+                values.append('F')
+            elif each != 'T' and each != 'F' and each != '':
                 counts.append(int(each))
-        i=0
+
+        i = 0
         for each in counts:
             for pixel in range(each):
-                if (i%2 == 0):
-                    pixel_color.append(True) #black
+                if (i % 2 == 0):
+                    pixel_color.append(False)  # black
                 else:
-                    pixel_color.append(False) #white
-            i+=1
+                    pixel_color.append(True)  # white
+            i += 1
 
-        overlay = Image.fromarray(pixel_color.reshape((imgx, imgy)).astype('uint8')*255)
-        overlay.save('overlays/'+filename)
+        pixel_color = np.array(pixel_color)
+
+        overlay = Image.fromarray(pixel_color.reshape((imgy, imgx)).astype('uint8') * 255)
+        overlay.save('overlays/' + filename + '.png', 'PNG')
 
     @app.post('/api/download')
-    async def api_points(
+    async def api_download(
             file: Annotated[bytes, File()],
             filename: Annotated[str, Form(...)],
+            imgx: Annotated[str, Form(...)],
+            imgy: Annotated[str, Form(...)],
             points: Annotated[str, Form(...)],
-            imgx: Annotated[int, Form(...)],
-            imgy: Annotated[int, Form(...)],
     ):
         ps = Points.parse_raw(points)
         input_points = np.array([[p.x, p.y] for p in ps.points])
@@ -156,8 +158,12 @@ def main(
             )
             predictor.reset_image()
 
-            generate_overlay(compress_mask(np.array(masks)), imgx, imgy, filename)
-        return {"code": 0}
+        x_dim = re.split('{|:|}|"', imgx)
+        y_dim = re.split('{|:|}|"', imgy)
+        file_name = re.split('{|:|}|"', filename)
+
+        generate_overlay(compress_mask(np.array(masks[2])), int(x_dim[5]), int(y_dim[5]), filename[5])
+        return {"code": 0, "data": "it worked"}
 
     @app.post('/api/point')
     async def api_points(

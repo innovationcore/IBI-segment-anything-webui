@@ -31,8 +31,8 @@ function Workspace() {
   const [ready, setBoxReady] = useState<boolean>(false)
   const controller = useRef<AbortController | null>()
   const [filename, setFilename] = useState('');
-  const [imgx, setImageX] = useState();
-  const [imgy, setImageY] = useState();
+  const [imgx, setImageX] = useState('');
+  const [imgy, setImageY] = useState('');
 
   useEffect(() => {
     if (!data) return
@@ -45,7 +45,7 @@ function Workspace() {
           y: Math.round(p.y)
         }
       })
-      // alert(JSON.stringify(points_list))
+      //alert(JSON.stringify(points_list))
       //let points_list = [{"x":1132,"y":1597}]
       const points_labels = points.map((p) => p.label)
       fromData.append('points', JSON.stringify(
@@ -178,12 +178,14 @@ function Workspace() {
     const fromData = new FormData()
     fromData.append('file', new File([data.file], 'image.png'))
     fromData.append('filename', JSON.stringify({
-      file_name: filename.split('.')[0]+"+overlay.png"
+      file_name: filename.split('.')[0]+"_overlay"
     }))
-    fromData.append('dimensions', JSON.stringify({
-          x_dim: imgx,
-          y_dim: imgy,
-        }))
+    fromData.append('x_dimension', JSON.stringify({
+          x_dim: imgx
+    }))
+    fromData.append('y_dimension', JSON.stringify({
+          y_dim: imgy
+    }))
     const points_list = points.map((p) => {
         return {
           x: Math.round(p.x),
@@ -207,14 +209,7 @@ function Workspace() {
       return res.json()
     }).then((res) => {
       if (res.code == 0) {
-        //get base64 image from json
-        const encoded = res.map.data((overlay: any) => {
-          return overlay
-        })
-
-        //Create buffer from base64 string of image
-        const buffer = Buffer.from(encoded, 'base64')
-
+        alert('Image Overlay downloaded to server.')
       }
     })
   }
@@ -285,7 +280,7 @@ function Workspace() {
                         }));
                       var downloadAnchorNode = document.createElement('a');
                       downloadAnchorNode.setAttribute("href", datastr);
-                      downloadAnchorNode.setAttribute("download", filename.split('.')[0]+"+masks+points.json");
+                      downloadAnchorNode.setAttribute("download", filename.split('.')[0]+"_masks_points.json");
                       document.body.appendChild(downloadAnchorNode); // required for firefox
                       downloadAnchorNode.click();
                       downloadAnchorNode.remove();
@@ -314,7 +309,7 @@ function Workspace() {
                         }));
                       var downloadAnchorNode = document.createElement('a');
                       downloadAnchorNode.setAttribute("href", datastr);
-                      downloadAnchorNode.setAttribute("download", filename.split('.')[0]+"+points.json");
+                      downloadAnchorNode.setAttribute("download", filename.split('.')[0]+"_points.json");
                       document.body.appendChild(downloadAnchorNode); // required for firefox
                       downloadAnchorNode.click();
                       downloadAnchorNode.remove();
@@ -342,7 +337,7 @@ function Workspace() {
                         }));
                       var downloadAnchorNode = document.createElement('a');
                       downloadAnchorNode.setAttribute("href", datastr);
-                      downloadAnchorNode.setAttribute("download", filename.split('.')[0]+"+masks.json");
+                      downloadAnchorNode.setAttribute("download", filename.split('.')[0]+"_masks.json");
                       document.body.appendChild(downloadAnchorNode); // required for firefox
                       downloadAnchorNode.click();
                       downloadAnchorNode.remove();
@@ -363,9 +358,7 @@ function Workspace() {
                   </button>
                   <button
                     className={uiBasiclClassName}
-                    onClick={(e) => {
-
-                    }}
+                    onClick={handleDownload}
                   >
                     Download Overlay
                   </button>
@@ -441,8 +434,8 @@ function Workspace() {
                   const img = new Image()
                   img.src = URL.createObjectURL(file)
                   img.onload = () => {
-                    setImageX(img.width)
-                    setImageY(img.height)
+                    setImageX(img.width.toString())
+                    setImageY(img.height.toString())
                     setData({
                       width: img.width,
                       height: img.height,
@@ -469,6 +462,8 @@ function Workspace() {
                       const img = new Image()
                       img.src = URL.createObjectURL(file)
                       img.onload = () => {
+                        setImageX(img.width.toString())
+                        setImageY(img.height.toString())
                         setData({
                           width: img.width,
                           height: img.height,
