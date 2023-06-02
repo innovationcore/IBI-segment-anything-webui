@@ -380,7 +380,7 @@ function Workspace() {
               </div>
               {masks.length > 0 && (
                 <div className={uiBasiclClassName}>
-                  <p>Segments and Clicks</p>
+                  <p>Download Results</p>
                   <button
                     className={uiBasiclClassName}
                     onClick={(e) => {
@@ -402,18 +402,6 @@ function Workspace() {
                   <button
                     className={uiBasiclClassName}
                     onClick={(e) => {
-                      navigator.clipboard.writeText(JSON.stringify({
-                        masks: masks,
-                        points: points,
-                      }))
-                      Popup('Copied', 1000)
-                    }}
-                  >
-                    Copy Combined Result
-                  </button>
-                  <button
-                    className={uiBasiclClassName}
-                    onClick={(e) => {
                       var datastr = "data:text/json;charset=utf-8," + encodeURIComponent(
                         JSON.stringify({
                           points: points,
@@ -427,17 +415,6 @@ function Workspace() {
                     }}
                   >
                     Download Points JSON
-                  </button>
-                  <button
-                    className={uiBasiclClassName}
-                    onClick={(e) => {
-                      navigator.clipboard.writeText(JSON.stringify({
-                        points: points,
-                      }))
-                      Popup('Copied', 1000)
-                    }}
-                  >
-                    Copy Points JSON
                   </button>
                   <button
                     className={uiBasiclClassName}
@@ -458,22 +435,53 @@ function Workspace() {
                   </button>
                   <button
                     className={uiBasiclClassName}
-                    onClick={(e) => {
-                      navigator.clipboard.writeText(JSON.stringify({
-                        masks: masks,
-                      }))
-                      Popup('Copied', 1000)
-                    }}
-                  >
-                    Copy Masks as JSON
-                  </button>
-                  <button
-                    className={uiBasiclClassName}
                     onClick={handleDownload}
                   >
                     Download Overlay as PNG
                   </button>
                 </div>
+              )}
+
+              {masks.length > 0 && (
+              <div className={uiBasiclClassName}>
+                <div>
+                  <p>Copy Results</p>
+                  <button
+                      className={uiBasiclClassName}
+                      onClick={(e) => {
+                        navigator.clipboard.writeText(JSON.stringify({
+                          points: points,
+                        }))
+                        Popup('Copied', 1000)
+                      }}
+                  >
+                    Copy Points JSON
+                  </button>
+                  <button
+                      className={uiBasiclClassName}
+                      onClick={(e) => {
+                        navigator.clipboard.writeText(JSON.stringify({
+                          masks: masks,
+                          points: points,
+                        }))
+                        Popup('Copied', 1000)
+                      }}
+                  >
+                    Copy Combined Result
+                  </button>
+                  <button
+                      className={uiBasiclClassName}
+                      onClick={(e) => {
+                        navigator.clipboard.writeText(JSON.stringify({
+                          masks: masks,
+                        }))
+                        Popup('Copied', 1000)
+                      }}
+                  >
+                    Copy Masks as JSON
+                  </button>
+                </div>
+              </div>
               )}
             </div>
             <div className={uiBasiclClassName}>
