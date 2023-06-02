@@ -165,6 +165,37 @@ def main(
         generate_overlay(compress_mask(np.array(masks[2])), int(x_dim[5]), int(y_dim[5]), file_name[5])
         return {"code": 0, "data": "it worked"}
 
+    #Inserts points sent here in the form of a valid JSON object which is produced by the frontend
+    @app.post('/api/copy-paste')
+    async def api_insert(
+            file: Annotated[bytes, File()],
+            points: Annotated[str, Form(...)],
+    ):
+        ps = Points.parse_raw(points)
+        input_points = np.array([[p.x, p.y] for p in ps.points])
+        input_labels = np.array(ps.points_labels)
+        image_data = Image.open(io.BytesIO(file))
+        image_data = np.array(image_data)
+        with model_lock:
+            predictor.set_image(image_data)
+            masks, scores, logits = predictor.predict(
+                point_coords=input_points,
+                point_labels=input_labels,
+                multimask_output=True,
+            )
+            predictor.reset_image()
+        masks = [
+            {
+                "segmentation": compress_mask(np.array(mask)),
+                "stability_score": float(scores[idx]),
+                "bbox": [0, 0, 0, 0],
+                "area": np.sum(mask).item(),
+            }
+            for idx, mask in enumerate(masks)
+        ]
+        masks = sorted(masks, key=lambda x: x['stability_score'], reverse=True)
+        return {"code": 0, "data": masks[:]}
+
     @app.post('/api/point')
     async def api_points(
             file: Annotated[bytes, File()],

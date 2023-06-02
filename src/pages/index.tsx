@@ -2,7 +2,7 @@ import Head from 'next/head'
 import { useState, useEffect, useRef } from 'react'
 import { InteractiveSegment, Point, Mask, Data}
   from '../components/interactive_segment'
-import {any} from "prop-types";
+import {any, number} from "prop-types";
 import Jimp from "jimp";
 import * as fs from "fs";
 import {from} from "form-data";
@@ -122,6 +122,7 @@ function Workspace() {
     }
   }, [mode])
 
+  //Temporarily disabled the button as it wasn't of use at the time
   const handleTextPrompt = () => {
     if (prompt === '' || !data) return
     const fromData = new FormData()
@@ -214,6 +215,85 @@ function Workspace() {
     })
   }
 
+  //Contains methods to accept the point JSON output and convert it to rendered points and
+  //segmentations on screen
+  const handleCopyPaste = () => {
+    if (prompt === '' || !data) return
+    const fromData = new FormData()
+
+    const obj = JSON.parse(prompt)
+
+    setPoints(obj.points)
+
+    const points_list = points.map((p) => {
+      return {
+        x: Math.round(p.x),
+        y: Math.round(p.y)
+      }
+    })
+    //alert(JSON.stringify(points_list))
+    //let points_list = [{"x":1132,"y":1597}]
+    const points_labels = points.map((p) => p.label)
+
+    fromData.append('file', new File([data.file], 'image.png'))
+    fromData.append('points', JSON.stringify({ points: points_list, points_labels }))
+    controller.current?.abort()
+    controller.current = new AbortController()
+    setProcessing(true)
+    fetch('/api/copy-paste', {
+      method: 'POST',
+      body: fromData,
+      signal: controller.current?.signal
+    }).then((res) => {
+      setProcessing(false)
+      return res.json()
+    }).then((res) => {
+      if (res.code == 0) {
+        const maskData = res.data.map((mask: any) => {
+          return mask
+        })
+        setMasks(maskData)
+      }
+    })
+  }
+
+  //Should function the same as handleCopyPaste but with uploading a JSON file
+  const handleUploadJSON = () => {
+    if (!data) return
+    const fromData = new FormData()
+
+    const points_list = points.map((p) => {
+      return {
+        x: Math.round(p.x),
+        y: Math.round(p.y)
+      }
+    })
+    //alert(JSON.stringify(points_list))
+    //let points_list = [{"x":1132,"y":1597}]
+    const points_labels = points.map((p) => p.label)
+
+    fromData.append('file', new File([data.file], 'image.png'))
+    fromData.append('points', JSON.stringify({ points: points_list, points_labels }))
+    controller.current?.abort()
+    controller.current = new AbortController()
+    setProcessing(true)
+    fetch('/api/copy-paste', {
+      method: 'POST',
+      body: fromData,
+      signal: controller.current?.signal
+    }).then((res) => {
+      setProcessing(false)
+      return res.json()
+    }).then((res) => {
+      if (res.code == 0) {
+        const maskData = res.data.map((mask: any) => {
+          return mask
+        })
+        setMasks(maskData)
+      }
+    })
+  }
+
   return (
     <div className="flex items-stretch justify-center flex-1 stage min-h-fit">
       <section className="flex-col hidden min-w-[225px] w-1/5 py-5 overflow-y-auto md:flex lg:w-72">
@@ -255,6 +335,7 @@ function Workspace() {
                 </div>
               </div>
               <div className={uiBasiclClassName}>
+                <p>Get Segment from JSON</p>
                 <textarea className='w-full h-20 outline outline-gray-200 p-1'
                   onChange={(e) => {
                     setPrompt(e.target.value)
@@ -262,9 +343,39 @@ function Workspace() {
                   value={prompt} />
                 <button
                   className='my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 bg-white hover:bg-blue-500 hover:text-white'
-                  onClick={handleTextPrompt}
+                  onClick={handleCopyPaste}
                 >
-                  CLIP Send
+                  Paste Points JSON
+                </button>
+                <button
+                    className='my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 bg-white hover:bg-blue-500 hover:text-white'
+                    onClick={() => {
+                      const input = document.createElement('input')
+                      input.type = 'file'
+                      input.accept = 'application/json'
+                      input.onchange = (e) => {
+                        const file = (e.target as HTMLInputElement).files?.[0]
+                        if (file) {
+                          const reader = new FileReader()
+                          reader.onload = (event) => {
+                            const contents = event.target?.result as string;
+                            try {
+                              const jsonData = JSON.parse(contents);
+                              setPoints(jsonData.points)
+                              handleUploadJSON()
+                              console.log(jsonData)
+                              // Perform further actions with the parsed JSON data here
+                            } catch (error) {
+                              console.error('Error parsing JSON file:', error)
+                            }
+                          }
+                          reader.readAsText(file)
+                        }
+                      }
+                      input.click()
+                    }}
+                >
+                  Upload Points JSON File
                 </button>
               </div>
               {masks.length > 0 && (
@@ -315,7 +426,7 @@ function Workspace() {
                       downloadAnchorNode.remove();
                     }}
                   >
-                    Download Points
+                    Download Points JSON
                   </button>
                   <button
                     className={uiBasiclClassName}
@@ -326,7 +437,7 @@ function Workspace() {
                       Popup('Copied', 1000)
                     }}
                   >
-                    Copy Points
+                    Copy Points JSON
                   </button>
                   <button
                     className={uiBasiclClassName}
@@ -343,7 +454,7 @@ function Workspace() {
                       downloadAnchorNode.remove();
                     }}
                   >
-                    Download Masks (JSON)
+                    Download Masks as JSON
                   </button>
                   <button
                     className={uiBasiclClassName}
@@ -354,13 +465,13 @@ function Workspace() {
                       Popup('Copied', 1000)
                     }}
                   >
-                    Copy Masks (JSON)
+                    Copy Masks as JSON
                   </button>
                   <button
                     className={uiBasiclClassName}
                     onClick={handleDownload}
                   >
-                    Download Overlay
+                    Download Overlay as PNG
                   </button>
                 </div>
               )}
