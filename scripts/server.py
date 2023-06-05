@@ -136,7 +136,7 @@ def main(
         overlay = Image.fromarray(pixel_color.reshape((imgy, imgx)).astype('uint8') * 255)
         overlay.save('overlays/' + filename + '.png', 'PNG')
 
-        url = 'localhost:8000/'+filename+'.png'
+        url = 'localhost:8001/'+filename+'.png'
         return url
 
     @app.post('/api/download')
