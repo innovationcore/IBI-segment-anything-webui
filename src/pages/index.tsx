@@ -11,6 +11,13 @@ const uiBasiclClassName = 'transition-all my-2 rounded-xl px-4 py-2 cursor-point
 const uiActiveClassName = 'bg-blue-500 text-white';
 const uiInactiveClassName = 'bg-white text-gray-400';
 
+export const config = {
+  basePath: '/sam',
+  api: {
+    bodyParser: false
+  }
+}
+
 function Popup(text: string, timeout: number = 1000) {
   const popup = document.createElement('div')
   popup.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 z-50 bg-white text-gray-500 rounded-xl px-4 py-2'
@@ -54,7 +61,7 @@ function Workspace() {
       controller.current?.abort()
       controller.current = new AbortController()
       setProcessing(true)
-      fetch('/api/point', {
+      fetch('/sam/api/point', {
         method: 'POST',
         body: fromData,
         signal: controller.current?.signal,
@@ -87,7 +94,7 @@ function Workspace() {
       controller.current?.abort()
       controller.current = new AbortController()
       setProcessing(true)
-      fetch('/api/box', {
+      fetch('/sam/api/box', {
         method: 'POST',
         body: fromData,
         signal: controller.current?.signal
@@ -132,7 +139,7 @@ function Workspace() {
     controller.current?.abort()
     controller.current = new AbortController()
     setProcessing(true)
-    fetch('/api/clip', {
+    fetch('/sam/api/clip', {
       method: 'POST',
       body: fromData,
       signal: controller.current?.signal
@@ -157,7 +164,7 @@ function Workspace() {
     controller.current?.abort()
     controller.current = new AbortController()
     setProcessing(true)
-    fetch('/api/everything', {
+    fetch('/sam/api/everything', {
       method: 'POST',
       body: fromData,
       signal: controller.current?.signal
@@ -240,7 +247,7 @@ function Workspace() {
     controller.current?.abort()
     controller.current = new AbortController()
     setProcessing(true)
-    fetch('/api/copy-paste', {
+    fetch('/sam/api/copy-paste', {
       method: 'POST',
       body: fromData,
       signal: controller.current?.signal
@@ -278,7 +285,7 @@ function Workspace() {
     controller.current?.abort()
     controller.current = new AbortController()
     setProcessing(true)
-    fetch('/api/copy-paste', {
+    fetch('/sam/api/copy-paste', {
       method: 'POST',
       body: fromData,
       signal: controller.current?.signal
@@ -516,7 +523,7 @@ function Workspace() {
             <InteractiveSegment
               data={data} mode={mode} processing={processing}
               points={points} setPoints={setPoints} masks={masks}
-              ready={ready} setBoxReady={setBoxReady} />
+              ready={ready} setBoxReady={setBoxReady}  basePath={'/sam'}/>
             {processing && (
               <div className=" left-0 w-full flex items-center bg-black bg-opacity-50">
                 <div className="flex flex-col items-center justify-center w-full h-full">

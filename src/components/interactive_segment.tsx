@@ -10,6 +10,7 @@ export type Data = { width: number, height: number, file: File, img: HTMLImageEl
 export function InteractiveSegment(
     { data, processing, mode, points, setPoints, masks, ready, setBoxReady }:
         {
+            basePath: '/sam',
             data: Data,
             processing: boolean,
             mode: 'click' | 'box' | 'everything',

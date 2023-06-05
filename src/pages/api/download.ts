@@ -5,6 +5,7 @@ import { promises as fs } from 'fs';
 import * as utils from '@/utils';
 
 export const config = {
+    basePath: '/sam',
     api: {
         bodyParser: false
     }
