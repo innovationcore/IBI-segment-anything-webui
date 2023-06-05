@@ -136,6 +136,9 @@ def main(
         overlay = Image.fromarray(pixel_color.reshape((imgy, imgx)).astype('uint8') * 255)
         overlay.save('overlays/' + filename + '.png', 'PNG')
 
+        url = 'localhost:8000/'+filename+'.png'
+        return url
+
     @app.post('/api/download')
     async def api_download(
             file: Annotated[bytes, File()],
@@ -162,8 +165,8 @@ def main(
         y_dim = re.split('{|:|}|"', imgy)
         file_name = re.split('{|:|}|"', filename)
 
-        generate_overlay(compress_mask(np.array(masks[2])), int(x_dim[5]), int(y_dim[5]), file_name[5])
-        return {"code": 0, "data": "it worked"}
+        url = generate_overlay(compress_mask(np.array(masks[2])), int(x_dim[5]), int(y_dim[5]), file_name[5])
+        return {"code": 0, "data": url}
 
     #Inserts points sent here in the form of a valid JSON object which is produced by the frontend
     @app.post('/api/copy-paste')

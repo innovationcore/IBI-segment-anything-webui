@@ -249,10 +249,11 @@ function Workspace() {
       return res.json()
     }).then((res) => {
       if (res.code == 0) {
-        const maskData = res.data.map((mask: any) => {
+        window.open(res.data.url, '_blank');
+        /*const maskData = res.data.map((mask: any) => {
           return mask
         })
-        setMasks(maskData)
+        setMasks(maskData)*/
       }
     })
   }
@@ -441,7 +442,6 @@ function Workspace() {
                   </button>
                 </div>
               )}
-
               {masks.length > 0 && (
               <div className={uiBasiclClassName}>
                 <div>
