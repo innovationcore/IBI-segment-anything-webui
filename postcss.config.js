@@ -1,6 +1,5 @@
 module.exports = {
-  basePath: '/sam',
-  plugins: {
+    plugins: {
     tailwindcss: {},
     autoprefixer: {},
   },
