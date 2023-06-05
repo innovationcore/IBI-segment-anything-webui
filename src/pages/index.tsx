@@ -704,7 +704,7 @@ export default function Home() {
         <div className="flex items-center border-b-[1px] pt-3 pb-3">
           <h1 className="m-2 text-xl font-bold leading-tight md:mx-6 lg:text-2xl">Image Segment</h1>
           <div className='hidden ml-auto md:flex [&>*]:flex [&>*]:items-center min-h-full'>
-            <p className="mr-10 font-medium text-base text-gray-600">Inject Human Intelligence into Data</p>
+            <p className="mr-10 font-medium text-base text-gray-600">Segment Medical Images in Browser</p>
           </div>
         </div>
         <Workspace />
