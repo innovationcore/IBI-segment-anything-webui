@@ -3,4 +3,8 @@ const nextConfig = {
   reactStrictMode: true,
 }
 
+module.exports = {
+  basePath: '/sam',
+};
+
 module.exports = nextConfig
