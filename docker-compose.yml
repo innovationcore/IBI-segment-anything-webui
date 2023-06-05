@@ -17,6 +17,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.server
+    deploy:
+        resources:
+          reservations:
+            devices: #add additional device id's if you have more GPUs in your system
+             - driver: nvidia
+               device_ids: ['0']
+               capabilities: [gpu]
     ports:
       - "8000:8000"
     networks:

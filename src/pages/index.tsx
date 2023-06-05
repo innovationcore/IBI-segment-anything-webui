@@ -208,7 +208,7 @@ function Workspace() {
     controller.current?.abort()
     controller.current = new AbortController()
     setProcessing(true)
-    fetch('/api/download', {
+    fetch('/sam/api/download', {
       method: 'POST',
       body: fromData,
       signal: controller.current?.signal
