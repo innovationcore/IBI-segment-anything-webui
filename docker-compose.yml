@@ -22,15 +22,6 @@ services:
     networks:
       - sam-network
 
-  image-host:
-    build:
-      context: .
-      dockerfile: Dockerfile.image
-    ports:
-      - "8000:8000"
-    networks:
-      - sam-network
-
 networks:
   sam-network:
     driver: bridge

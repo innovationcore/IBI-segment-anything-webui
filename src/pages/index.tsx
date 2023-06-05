@@ -249,7 +249,7 @@ function Workspace() {
       return res.json()
     }).then((res) => {
       if (res.code == 0) {
-        window.open(res.data.url, '_blank');
+       //window.open(res.data.url, '_blank');
         /*const maskData = res.data.map((mask: any) => {
           return mask
         })
