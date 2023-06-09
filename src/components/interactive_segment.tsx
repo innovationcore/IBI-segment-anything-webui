@@ -163,6 +163,7 @@ export function InteractiveSegment(
             }}
         >
             <div className="flax justify-between w-full my-2">
+                <p className="inline-block text-sm font-medium text-gray-700">Change Slider To Tweak Segmentation Results</p>
                 <label className="inline-block text-sm font-medium text-gray-700">
                     Mask Area Threshold:
                     <input

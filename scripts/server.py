@@ -5,7 +5,6 @@ import numpy as np
 import uvicorn
 import clip #ensure you are installing the CLIP.git not the clip package
 import re
-import json
 
 from fastapi import FastAPI, File, Form
 from fastapi.staticfiles import StaticFiles
@@ -204,6 +203,7 @@ def main(
             file: Annotated[bytes, File()],
             points: Annotated[str, Form(...)],
     ):
+        v = gdb.parse_and_eval(file)
         ps = Points.parse_raw(points)
         input_points = np.array([[p.x, p.y] for p in ps.points])
         input_labels = np.array(ps.points_labels)

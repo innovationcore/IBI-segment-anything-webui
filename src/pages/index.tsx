@@ -33,7 +33,8 @@ function Workspace() {
   const [mode, setMode] = useState<'click' | 'box' | 'everything'>('click')
   const [points, setPoints] = useState<Point[]>([])
   const [masks, setMasks] = useState<Mask[]>([])
-  const [prompt, setPrompt] = useState<string>('')
+  const [json_prompt, setJSONPrompt] = useState<string>('')
+  const [text_prompt, setTextPrompt] = useState<string>('')
   const [processing, setProcessing] = useState<boolean>(false)
   const [ready, setBoxReady] = useState<boolean>(false)
   const controller = useRef<AbortController | null>()
@@ -131,11 +132,12 @@ function Workspace() {
 
   //Temporarily disabled the button as it wasn't of use at the time
   const handleTextPrompt = () => {
-    if (prompt === '' || !data) return
+    if (text_prompt === '' || !data) return
     const fromData = new FormData()
+
     fromData.append('file', new File([data.file], 'image.png'))
     fromData.append('prompt',
-      JSON.stringify({ text: prompt }))
+      JSON.stringify({ text: text_prompt }))
     controller.current?.abort()
     controller.current = new AbortController()
     setProcessing(true)
@@ -225,10 +227,10 @@ function Workspace() {
   //Contains methods to accept the point JSON output and convert it to rendered points and
   //segmentations on screen
   const handleCopyPaste = () => {
-    if (prompt === '' || !data) return
+    if (json_prompt === '' || !data) return
     const fromData = new FormData()
 
-    const obj = JSON.parse(prompt)
+    const obj = JSON.parse(json_prompt)
 
     setPoints(obj.points)
 
@@ -343,12 +345,26 @@ function Workspace() {
                 </div>
               </div>
               <div className={uiBasiclClassName}>
+                <p>Get Segment from Query</p>
+                  <textarea className='w-full h-20 outline outline-gray-200 p-1'
+                            onChange={(e) => {
+                              setTextPrompt(e.target.value)
+                            }}
+                            value={text_prompt} />
+                  <button
+                      className='my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 bg-white hover:bg-blue-500 hover:text-white'
+                      onClick={handleTextPrompt}
+                  >
+                    Send Query
+                  </button>
+              </div>
+              <div className={uiBasiclClassName}>
                 <p>Get Segment from JSON</p>
                 <textarea className='w-full h-20 outline outline-gray-200 p-1'
                   onChange={(e) => {
-                    setPrompt(e.target.value)
+                    setJSONPrompt(e.target.value)
                   }}
-                  value={prompt} />
+                  value={json_prompt} />
                 <button
                   className='my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 bg-white hover:bg-blue-500 hover:text-white'
                   onClick={handleCopyPaste}
@@ -631,9 +647,9 @@ function Workspace() {
         <div className='transition-all m-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'>
           <textarea className='w-full h-20 outline outline-gray-200 p-1'
             onChange={(e) => {
-              setPrompt(e.target.value)
+              setTextPrompt(e.target.value)
             }}
-            value={prompt} />
+            value={text_prompt} />
           <button
             className='m-1 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 bg-white hover:bg-blue-500 hover:text-white'
             onClick={handleTextPrompt}
