@@ -66,15 +66,15 @@ def retrieve(
 # this is where we can do it.
 @click.command()
 @click.option('--model',
-              default='vit_b',
+              default='desam',
               help='model name',
-              type=click.Choice(['vit_b', 'vit_l', 'vit_h']))
-@click.option('--model_path', default='model/sam_vit_b_01ec64.pth', help='model path')
+              type=click.Choice(['vit_b', 'vit_l', 'vit_h', 'desam']))
+@click.option('--model_path', default='model/desam_model_best.pth', help='model path')
 @click.option('--port', default=8000, help='port')
 @click.option('--host', default='0.0.0.0', help='host')
 def main(
-        model="vit_b",
-        model_path="model/sam_vit_b_01ec64.pth",
+        model="desam",
+        model_path="model/desam_model_best.pth",
         port=8000,
         host="0.0.0.0",
 ):
