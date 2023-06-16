@@ -1,4 +1,5 @@
 import io
+import os
 import click
 import torch
 import numpy as np
@@ -10,22 +11,19 @@ from fastapi import FastAPI, File, Form
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Sequence, Callable
-from segment_anything import SamPredictor, SamAutomaticMaskGenerator, sam_model_registry
+from segment_anything import SamPredictor, SamAutomaticMaskGenerator, sam_model_registry, build_sam
 from PIL import Image
 from typing_extensions import Annotated
 from threading import Lock
 from io import BytesIO
 
-
 class Point(BaseModel):
     x: int
     y: int
 
-
 class Points(BaseModel):
     points: Sequence[Point]
     points_labels: Sequence[int]
-
 
 class Box(BaseModel):
     x1: int
@@ -33,16 +31,13 @@ class Box(BaseModel):
     x2: int
     y2: int
 
-
 class TextPrompt(BaseModel):
     text: str
-
 
 def segment_image(image_array: np.ndarray, segmentation_mask: np.ndarray):
     segmented_image = np.zeros_like(image_array)
     segmented_image[segmentation_mask] = image_array[segmentation_mask]
     return segmented_image
-
 
 def retrieve(
     elements: Sequence[np.ndarray],
@@ -62,30 +57,54 @@ def retrieve(
         probs = (100.0 * image_features @ text_features.T)
     return probs[:, 0].softmax(dim=-1)
 
+def setModel(modelname, modelfile):
+    return modelname, modelfile
+
+model_file = "sam_vit_b_01ec64.pth" #default
+model_name = "vit_b" #default
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print("device:", device)
+
+sam = sam_model_registry[model_name](checkpoint="model/"+model_file)
+sam.to(device=device)
+predictor = SamPredictor(sam)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+mask_generator = SamAutomaticMaskGenerator(sam)
+model_lock = Lock()
+
+model_choices = ['vit_b', 'vit_h', 'vit_l'] #these are the supported model names in build_sam
+model_files = ['sam_vit_b_01ec64.pth', 'sam_vit_h_4b8939.pth', 'sam_vit_l_0b3195.pth'] #these are the file paths which we have downloaded
+
+
+def rebuildSAM():
+    sam = sam_model_registry[model_name](checkpoint="model/"+model_file)
+    sam.to(device=device)
+    predictor = SamPredictor(sam)
+    mask_generator = SamAutomaticMaskGenerator(sam)
+    model_lock = Lock()
+
+    return predictor, mask_generator, model_lock
+
 # Here we can change the used model, so as we create our own or if we wish to switch to one of the other three models,
 # this is where we can do it.
 @click.command()
 @click.option('--model',
-              default='vit_b',
+              default=model_name,
               help='model name',
-              type=click.Choice(['vit_b', 'vit_l', 'vit_h']))
-@click.option('--model_path', default='model/sam_vit_b_01ec64.pth', help='model path')
+              type=click.Choice(model_choices)) #need to add more options here as we add new models
+@click.option('--model_path', default='model/'+model_file, help='model path')
 @click.option('--port', default=8000, help='port')
 @click.option('--host', default='0.0.0.0', help='host')
 def main(
-        model="vit_b",
-        model_path="model/sam_vit_b_01ec64.pth",
+        model=model_name, # used to just say "vit_b"
+        model_path="model/"+model_file,
         port=8000,
         host="0.0.0.0",
 ):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print("device:", device)
+    #global model_name, model_file, predictor, mask_generator, model_lock
 
-    build_sam = sam_model_registry[model]
-    model = build_sam(checkpoint=model_path).to(device)
-    predictor = SamPredictor(model)
-    mask_generator = SamAutomaticMaskGenerator(model)
-    model_lock = Lock()
+    #predictor, mask_generator, model_lock = rebuildSAM()
 
     clip_model, preprocess = clip.load("ViT-B/16", device=device)
 
@@ -138,6 +157,58 @@ def main(
         url = 'localhost:8000/'+filename+'.png'
         return url
 
+    @app.post('/api/populate')
+    async def api_populate(
+    ):
+        return {"code": 0, "data": model_choices}
+
+    @app.post('/api/select-model')
+    async def api_select(
+        file: Annotated[bytes, File()],
+        redo: Annotated[bool, Form(...)],
+        points: Annotated[str, Form(...)],
+        modelname = Annotated[str, Form(...)],
+    ):
+        global model_name, model_file, predictor, mask_generator, model_lock # Calls back to old vars instead of making local refs
+        # Add new cases for new models which can be selected
+        match modelname:
+            case 'vit_b':
+                model_name, model_file = setModel(modelname, model_files[0])
+            case 'vit_h':
+                model_name, model_file = setModel(modelname, model_files[1])
+            case 'vit_l':
+                model_name, model_file = setModel(modelname, model_files[2])
+
+        predictor, mask_generator, model_lock = rebuildSAM()
+
+        if redo: #only runs if redo is true, meaning that there are points to be redone with the new model selection
+            ps = Points.parse_raw(points)
+            input_points = np.array([[p.x, p.y] for p in ps.points])
+            input_labels = np.array(ps.points_labels)
+            image_data = Image.open(io.BytesIO(file))
+            image_data = np.array(image_data)
+            with model_lock:
+                predictor.set_image(image_data)
+                masks, scores, logits = predictor.predict(
+                    point_coords=input_points,
+                    point_labels=input_labels,
+                    multimask_output=True,
+                )
+                predictor.reset_image()
+            masks = [
+                {
+                    "segmentation": compress_mask(np.array(mask)),
+                    "stability_score": float(scores[idx]),
+                    "bbox": [0, 0, 0, 0],
+                    "area": np.sum(mask).item(),
+                }
+                for idx, mask in enumerate(masks)
+            ]
+            masks = sorted(masks, key=lambda x: x['stability_score'], reverse=True)
+            return {"code": 2, "data": masks[:], "model": model_name}
+        else:
+            return {"code": 0, "model": model_name}
+
     @app.post('/api/download')
     async def api_download(
             file: Annotated[bytes, File()],
@@ -158,6 +229,7 @@ def main(
                 point_labels=input_labels,
                 multimask_output=True,
             )
+
             predictor.reset_image()
 
         x_dim = re.split('{|:|}|"', imgx)
@@ -203,7 +275,6 @@ def main(
             file: Annotated[bytes, File()],
             points: Annotated[str, Form(...)],
     ):
-        v = gdb.parse_and_eval(file)
         ps = Points.parse_raw(points)
         input_points = np.array([[p.x, p.y] for p in ps.points])
         input_labels = np.array(ps.points_labels)

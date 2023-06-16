@@ -1,3 +1,4 @@
+
 import Head from 'next/head'
 import { useState, useEffect, useRef } from 'react'
 import { InteractiveSegment, Point, Mask, Data}
@@ -5,11 +6,19 @@ import { InteractiveSegment, Point, Mask, Data}
 import {any, number} from "prop-types";
 import Jimp from "jimp";
 import * as fs from "fs";
-import {from} from "form-data";
+import FormData, {from} from "form-data";
+import {Simulate} from "react-dom/test-utils";
+import select = Simulate.select;
+
+import React, { CSSProperties } from 'react';
+import Select from 'react-select';
+import Creatable from 'react-select/creatable';
+import CreatableSelect from "react-select/creatable";
 
 const uiBasiclClassName = 'transition-all my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 ';
 const uiActiveClassName = 'bg-blue-500 text-white';
 const uiInactiveClassName = 'bg-white text-gray-400';
+const defaultChoice = 'Models Load After File Upload';
 
 export const config = {
   basePath: '/sam',
@@ -17,7 +26,6 @@ export const config = {
     bodyParser: false
   }
 }
-
 function Popup(text: string, timeout: number = 1000) {
   const popup = document.createElement('div')
   popup.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 z-50 bg-white text-gray-500 rounded-xl px-4 py-2'
@@ -27,11 +35,28 @@ function Popup(text: string, timeout: number = 1000) {
     popup.remove()
   }, timeout)
 }
+interface Option {
+  readonly label: string;
+  readonly value: string;
+}
+const createOption = (label: string) => ({
+  label,
+  value: label
+});
+
+const defaultOptions = [
+  createOption('Models Load After File Upload'),
+];
+
+function refresh() {
+  window.location.reload();
+}
 
 function Workspace() {
   const [data, setData] = useState<Data | null>(null)
   const [mode, setMode] = useState<'click' | 'box' | 'everything'>('click')
   const [points, setPoints] = useState<Point[]>([])
+  const [redo, setRedo] = useState(false);
   const [masks, setMasks] = useState<Mask[]>([])
   const [json_prompt, setJSONPrompt] = useState<string>('')
   const [text_prompt, setTextPrompt] = useState<string>('')
@@ -41,9 +66,15 @@ function Workspace() {
   const [filename, setFilename] = useState('');
   const [imgx, setImageX] = useState('');
   const [imgy, setImageY] = useState('');
+  const [options, setOptions] = useState(defaultOptions);
+  const [isLoading, setIsLoading] = useState(false);
+  const [value, setValue] = useState<Option | null>();
+
+  const defaultOption = createOption('vit_b'); //change this if you change the default model in the backend
 
   useEffect(() => {
     if (!data) return
+    setRedo(true)
     if (mode === 'click' && points.length > 0) {
       const fromData = new FormData()
       fromData.append('file', new File([data.file], 'image.png'))
@@ -157,7 +188,6 @@ function Workspace() {
       }
     })
   }
-
   const handleEverything = () => {
     setMode('everything')
     if (!data) return
@@ -182,7 +212,6 @@ function Workspace() {
       }
     })
   }
-
   const handleDownload = () => {
     if (!data) return
     const fromData = new FormData()
@@ -304,12 +333,105 @@ function Workspace() {
     })
   }
 
+  //Gets a JSON object from backend containing all models currently available to choose
+  const getDropdownItems = () => {
+    controller.current?.abort()
+    controller.current = new AbortController()
+    fetch('/sam/api/populate', {
+      method: 'POST',
+      signal: controller.current?.signal
+    }).then((res) => {
+      return res.json()
+    }).then((res) => {
+      if (res.code == 0) {
+        console.log(res.data)
+        for(let i=0; i<res.data.length; i++) {
+          handleCreate(res.data[i])
+        }
+      }
+    })
+  }
+  const selectModel = () => {
+    // @ts-ignore
+    console.log(value.label + ' was selected', value)
+    const fromData = new FormData()
+
+    if (data) {
+      fromData.append('file', new File([data.file], 'image.png'))
+    }
+    fromData.append('redo', redo)
+    const points_list = points.map((p) => {
+      return {
+        x: Math.round(p.x),
+        y: Math.round(p.y)
+      }
+    })
+    const points_labels = points.map((p) => p.label)
+    fromData.append('points', JSON.stringify(
+        { points: points_list, points_labels }
+    ))
+    fromData.append('modelname', JSON.stringify(
+        // @ts-ignore
+        {modelname: value.label}
+    ))
+    controller.current?.abort()
+    controller.current = new AbortController()
+    setProcessing(true)
+    fetch('/sam/api/select-model', {
+      method: 'POST',
+      body: fromData,
+      signal: controller.current?.signal
+    }).then((res) => {
+      return res.json()
+    }).then((res) => {
+      console.log(res)
+      if (res.code == 2) {
+        setMasks([])
+        const maskData = res.data.map((mask: any) => {
+          return mask
+        })
+        setMasks(maskData)
+      }
+      else if (res.code == 0) {
+        console.log("Model changed.")
+      }
+    }).finally( () => {
+      setProcessing(false)
+    })
+  }
+  const handleCreate = (inputValue: string) => {
+    setValue(defaultOption);
+    setIsLoading(true);
+    setTimeout(() => {
+      const newOption = createOption(inputValue);
+      setIsLoading(false);
+      setOptions((prev) => [...prev, newOption]);
+    }, 1000);
+  };
+
   return (
     <div className="flex items-stretch justify-center flex-1 stage min-h-fit">
       <section className="flex-col hidden min-w-[225px] w-1/5 py-5 overflow-y-auto md:flex lg:w-72">
         <div className='shadow-[0px_0px_5px_5px_#00000024] rounded-xl mx-2'>
           <div className='p-4 pt-5'>
             <p className='text-lg font-semibold'>Tools</p>
+            <div>
+              <div className={uiBasiclClassName}>
+                <p>Select Model</p>
+                <CreatableSelect
+                    isClearable
+                    isDisabled={isLoading}
+                    isLoading={isLoading}
+                    onChange={(newValue) => setValue(newValue)}
+                    onCreateOption={handleCreate}
+                    options={options}
+                    value={value}
+                />
+                <button className={uiBasiclClassName} onClick={() => selectModel()}>
+                  Change Model
+                </button>
+              </div>
+            </div>
             <div>
               <div className={uiBasiclClassName}>
                 <p>Interactive Mode</p>
@@ -526,6 +648,8 @@ function Workspace() {
                   setPoints([])
                   setMasks([])
                   setMode('click')
+                  setOptions(defaultOptions)
+                  refresh()
                 }} >
                 Clean All
               </button>
@@ -599,6 +723,8 @@ function Workspace() {
                   input.onchange = (e) => {
                     const file = (e.target as HTMLInputElement).files?.[0]
                     if (file) {
+                      defaultOptions.pop()
+                      getDropdownItems()
                       setFilename(file.name)
                       console.log(file.name)
                       const img = new Image()
@@ -711,7 +837,7 @@ function Workspace() {
           </button>
         </div>
       </section>
-    </div >
+    </div>
   )
 }
 

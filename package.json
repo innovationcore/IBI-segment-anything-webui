@@ -22,6 +22,7 @@
     "postcss": "8.4.21",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-select": "^5.7.3",
     "tailwindcss": "3.3.1",
     "typescript": "5.0.3"
   },
@@ -41,4 +42,5 @@
     "url": "https://github.com/innovationcore/IBI-segment-anything-webui/issues"
   },
   "homepage": "https://github.com/innovationcore/IBI-segment-anything-webui#readme"
+
 }
