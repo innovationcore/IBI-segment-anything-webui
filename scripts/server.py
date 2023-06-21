@@ -17,14 +17,6 @@ from typing_extensions import Annotated
 from threading import Lock
 from io import BytesIO
 
-<<<<<<< Updated upstream
-=======
-import os
-os.path.join
-import build_sam
-
-
->>>>>>> Stashed changes
 class Point(BaseModel):
     x: int
     y: int
@@ -98,14 +90,14 @@ def rebuildSAM():
 # this is where we can do it.
 @click.command()
 @click.option('--model',
-              default=model_name,
+              default='vit_h',
               help='model name',
-              type=click.Choice(model_choices)) #need to add more options here as we add new models
-@click.option('--model_path', default='model/'+model_file, help='model path')
+              type=click.Choice(['vit_b', 'vit_l', 'vit_h']))
+@click.option('--model_path', default='model/sam_vit_h_4b8939.pth', help='model path')
 @click.option('--port', default=8000, help='port')
 @click.option('--host', default='0.0.0.0', help='host')
 def main(
-        model=model_name, # used to just say "vit_b"
+        model=model_name,
         model_path="model/"+model_file,
         port=8000,
         host="0.0.0.0",
