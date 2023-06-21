@@ -95,6 +95,7 @@ function Workspace() {
       setProcessing(true)
       fetch('/sam/api/point', {
         method: 'POST',
+        // @ts-ignore
         body: fromData,
         signal: controller.current?.signal,
       }).then((res) => {
@@ -128,6 +129,7 @@ function Workspace() {
       setProcessing(true)
       fetch('/sam/api/box', {
         method: 'POST',
+        // @ts-ignore
         body: fromData,
         signal: controller.current?.signal
       }).then((res) => {
@@ -174,6 +176,7 @@ function Workspace() {
     setProcessing(true)
     fetch('/sam/api/clip', {
       method: 'POST',
+      // @ts-ignore
       body: fromData,
       signal: controller.current?.signal
     }).then((res) => {
@@ -188,6 +191,7 @@ function Workspace() {
       }
     })
   }
+
   const handleEverything = () => {
     setMode('everything')
     if (!data) return
@@ -198,6 +202,7 @@ function Workspace() {
     setProcessing(true)
     fetch('/sam/api/everything', {
       method: 'POST',
+      // @ts-ignore
       body: fromData,
       signal: controller.current?.signal
     }).then((res) => {
@@ -212,6 +217,7 @@ function Workspace() {
       }
     })
   }
+
   const handleDownload = () => {
     if (!data) return
     const fromData = new FormData()
@@ -241,6 +247,7 @@ function Workspace() {
     setProcessing(true)
     fetch('/sam/api/download', {
       method: 'POST',
+      // @ts-ignore
       body: fromData,
       signal: controller.current?.signal
     }).then((res) => {
@@ -280,6 +287,7 @@ function Workspace() {
     setProcessing(true)
     fetch('/sam/api/copy-paste', {
       method: 'POST',
+      // @ts-ignore
       body: fromData,
       signal: controller.current?.signal
     }).then((res) => {
@@ -318,6 +326,7 @@ function Workspace() {
     setProcessing(true)
     fetch('/sam/api/copy-paste', {
       method: 'POST',
+      // @ts-ignore
       body: fromData,
       signal: controller.current?.signal
     }).then((res) => {
@@ -351,6 +360,7 @@ function Workspace() {
       }
     })
   }
+
   const selectModel = () => {
     // @ts-ignore
     console.log(value.label + ' was selected', value)
@@ -379,6 +389,7 @@ function Workspace() {
     setProcessing(true)
     fetch('/sam/api/select-model', {
       method: 'POST',
+      // @ts-ignore
       body: fromData,
       signal: controller.current?.signal
     }).then((res) => {
@@ -399,6 +410,7 @@ function Workspace() {
       setProcessing(false)
     })
   }
+
   const handleCreate = (inputValue: string) => {
     setValue(defaultOption);
     setIsLoading(true);
