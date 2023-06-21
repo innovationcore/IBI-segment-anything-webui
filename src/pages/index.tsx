@@ -71,7 +71,6 @@ function Workspace() {
   const [value, setValue] = useState<Option | null>();
 
   const defaultOption = createOption('vit_b'); //change this if you change the default model in the backend
-  const [lastPointState, setLastPointState] = useState<Point[]>([]);
 
   useEffect(() => {
     if (!data) return
@@ -361,10 +360,6 @@ function Workspace() {
       fromData.append('file', new File([data.file], 'image.png'))
     }
     fromData.append('redo', redo)
-  const handleClick = () => {
-    if (!data) return
-    const fromData = new FormData()
-    fromData.append('file', new File([data.file], 'image.png'))
     const points_list = points.map((p) => {
       return {
         x: Math.round(p.x),
@@ -392,17 +387,6 @@ function Workspace() {
       console.log(res)
       if (res.code == 2) {
         setMasks([])
-    controller.current?.abort()
-    controller.current = new AbortController()
-    setProcessing(true)
-    fetch('/sam/api/point', {
-      method: 'POST',
-      body: fromData,
-      signal: controller.current?.signal,
-    }).then((res) => {
-      return res.json()
-    }).then((res) => {
-      if (res.code == 0) {
         const maskData = res.data.map((mask: any) => {
           return mask
         })
@@ -424,10 +408,6 @@ function Workspace() {
       setOptions((prev) => [...prev, newOption]);
     }, 1000);
   };
-    }).finally(() => {
-      setProcessing(false)
-    })
-  }
 
   return (
     <div className="flex items-stretch justify-center flex-1 stage min-h-fit">
@@ -673,16 +653,6 @@ function Workspace() {
                 }} >
                 Clean All
               </button>
-              <button
-                  className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
-                  onClick={() => {
-                    setLastPointState(points)
-                    points.pop()
-                    setMasks([])
-                    handleClick()
-                  }}>
-                Undo Last Point
-              </button>
             </div>
           </div>
         </div>
@@ -886,7 +856,7 @@ export default function Home() {
             <p className="mr-10 font-medium text-base text-gray-600">Segment Medical Images in Browser</p>
           </div>
         </div>
-        <Workspace/>
+        <Workspace />
       </main>
     </>
   )
