@@ -644,6 +644,15 @@ function Workspace() {
             <div className={uiBasiclClassName}>
               <p>Interactive Setting</p>
               <button
+                  className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
+                  onClick={() => {
+                    points.pop()
+                    setMasks([])
+                    handleClick()
+                  }}>
+                Undo Last Point
+              </button>
+              <button
                 className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
                 onClick={() => {
                   setPoints([])
