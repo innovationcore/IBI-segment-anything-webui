@@ -684,9 +684,17 @@ function Workspace() {
               <button
                   className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
                   onClick={() => {
-                    points.pop()
-                    setMasks([])
-                    handleClick()
+                    if (points.length > 1) { //makes sure we don't pop an error by running handleClick() and trying to generate masks on an empty array
+                      points.pop()
+                      setMasks([])
+                      handleClick()
+                    }
+                    else {
+                      setProcessing(true)
+                      setMasks([])
+                      setPoints([])
+                      setProcessing(false)
+                    }
                   }}>
                 Undo Last Point
               </button>
