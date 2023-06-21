@@ -203,7 +203,6 @@ def main(
             file: Annotated[bytes, File()],
             points: Annotated[str, Form(...)],
     ):
-        v = gdb.parse_and_eval(file)
         ps = Points.parse_raw(points)
         input_points = np.array([[p.x, p.y] for p in ps.points])
         input_labels = np.array(ps.points_labels)

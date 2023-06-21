@@ -41,6 +41,7 @@ function Workspace() {
   const [filename, setFilename] = useState('');
   const [imgx, setImageX] = useState('');
   const [imgy, setImageY] = useState('');
+  const [lastPoint, setLastPoint] = useState();
 
   useEffect(() => {
     if (!data) return
@@ -304,6 +305,43 @@ function Workspace() {
     })
   }
 
+  const handleClick = () => {
+    if (!data) return
+    const fromData = new FormData()
+    fromData.append('file', new File([data.file], 'image.png'))
+    const points_list = points.map((p) => {
+      return {
+        x: Math.round(p.x),
+        y: Math.round(p.y)
+      }
+    })
+    //alert(JSON.stringify(points_list))
+    //let points_list = [{"x":1132,"y":1597}]
+    const points_labels = points.map((p) => p.label)
+    fromData.append('points', JSON.stringify(
+        { points: points_list, points_labels }
+    ))
+    controller.current?.abort()
+    controller.current = new AbortController()
+    setProcessing(true)
+    fetch('/sam/api/point', {
+      method: 'POST',
+      body: fromData,
+      signal: controller.current?.signal,
+    }).then((res) => {
+      return res.json()
+    }).then((res) => {
+      if (res.code == 0) {
+        const maskData = res.data.map((mask: any) => {
+          return mask
+        })
+        setMasks(maskData)
+      }
+    }).finally(() => {
+      setProcessing(false)
+    })
+  }
+
   return (
     <div className="flex items-stretch justify-center flex-1 stage min-h-fit">
       <section className="flex-col hidden min-w-[225px] w-1/5 py-5 overflow-y-auto md:flex lg:w-72">
@@ -526,8 +564,24 @@ function Workspace() {
                   setPoints([])
                   setMasks([])
                   setMode('click')
-                }} >
+                }}>
                 Clean All
+              </button>
+              <button
+                  className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
+                  onClick={() => {
+                    let popped = points[-1]
+                    points.pop()
+                    setMasks([])
+                    handleClick()
+                  }}>
+                Undo Segment
+              </button>
+              <button
+                  className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
+                  onClick={() => {
+                  }}>
+                Redo Segment
               </button>
             </div>
           </div>
