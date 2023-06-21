@@ -411,6 +411,44 @@ function Workspace() {
     })
   }
 
+  const handleClick = () => {
+    if (!data) return
+    const fromData = new FormData()
+    fromData.append('file', new File([data.file], 'image.png'))
+    const points_list = points.map((p) => {
+      return {
+        x: Math.round(p.x),
+        y: Math.round(p.y)
+      }
+    })
+    //alert(JSON.stringify(points_list))
+    //let points_list = [{"x":1132,"y":1597}]
+    const points_labels = points.map((p) => p.label)
+    fromData.append('points', JSON.stringify(
+        { points: points_list, points_labels }
+    ))
+    controller.current?.abort()
+    controller.current = new AbortController()
+    setProcessing(true)
+    fetch('/sam/api/point', {
+      method: 'POST',
+      // @ts-ignore
+      body: fromData,
+      signal: controller.current?.signal,
+    }).then((res) => {
+      return res.json()
+    }).then((res) => {
+      if (res.code == 0) {
+        const maskData = res.data.map((mask: any) => {
+          return mask
+        })
+        setMasks(maskData)
+      }
+    }).finally(() => {
+      setProcessing(false)
+    })
+  }
+
   const handleCreate = (inputValue: string) => {
     setValue(defaultOption);
     setIsLoading(true);
