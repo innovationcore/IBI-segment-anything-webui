@@ -41,7 +41,7 @@ function Workspace() {
   const [filename, setFilename] = useState('');
   const [imgx, setImageX] = useState('');
   const [imgy, setImageY] = useState('');
-  const [lastPoint, setLastPoint] = useState();
+  const [lastPointState, setLastPointState] = useState<Point[]>([]);
 
   useEffect(() => {
     if (!data) return
@@ -570,18 +570,12 @@ function Workspace() {
               <button
                   className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
                   onClick={() => {
-                    let popped = points[-1]
+                    setLastPointState(points)
                     points.pop()
                     setMasks([])
                     handleClick()
                   }}>
-                Undo Segment
-              </button>
-              <button
-                  className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
-                  onClick={() => {
-                  }}>
-                Redo Segment
+                Undo Last Point
               </button>
             </div>
           </div>
