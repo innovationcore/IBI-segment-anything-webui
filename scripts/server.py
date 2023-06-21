@@ -17,6 +17,7 @@ from threading import Lock
 from io import BytesIO
 
 
+
 class Point(BaseModel):
     x: int
     y: int
@@ -66,15 +67,15 @@ def retrieve(
 # this is where we can do it.
 @click.command()
 @click.option('--model',
-              default='desam',
+              default='vit_h',
               help='model name',
-              type=click.Choice(['vit_b', 'vit_l', 'vit_h', 'desam']))
-@click.option('--model_path', default='model/desam_model_best.pth', help='model path')
+              type=click.Choice(['vit_b', 'vit_l', 'vit_h']))
+@click.option('--model_path', default='model/sam_vit_h_4b8939.pth', help='model path')
 @click.option('--port', default=8000, help='port')
 @click.option('--host', default='0.0.0.0', help='host')
 def main(
-        model="desam",
-        model_path="model/desam_model_best.pth",
+        model="vit_h",
+        model_path="model/sam_vit_h_4b8939.pth",
         port=8000,
         host="0.0.0.0",
 ):
@@ -203,7 +204,6 @@ def main(
             file: Annotated[bytes, File()],
             points: Annotated[str, Form(...)],
     ):
-        v = gdb.parse_and_eval(file)
         ps = Points.parse_raw(points)
         input_points = np.array([[p.x, p.y] for p in ps.points])
         input_labels = np.array(ps.points_labels)

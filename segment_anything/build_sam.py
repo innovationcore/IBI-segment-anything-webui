@@ -26,10 +26,6 @@ def build_sam_vit_h(checkpoint=None):
         checkpoint=checkpoint,
     )
 
-
-build_sam = build_sam_vit_h
-
-
 def build_sam_vit_l(checkpoint=None):
     return _build_sam(
         encoder_embed_dim=1024,
@@ -38,7 +34,6 @@ def build_sam_vit_l(checkpoint=None):
         encoder_global_attn_indexes=[5, 11, 17, 23],
         checkpoint=checkpoint,
     )
-
 
 def build_sam_vit_b(checkpoint=None):
     return _build_sam(
@@ -49,7 +44,6 @@ def build_sam_vit_b(checkpoint=None):
         checkpoint=checkpoint,
     )
 
-
 sam_model_registry = {
     "default": build_sam_vit_h,
     "vit_h": build_sam_vit_h,
@@ -57,6 +51,7 @@ sam_model_registry = {
     "vit_b": build_sam_vit_b,
 }
 
+build_sam = build_sam_vit_h #change as you change model
 
 def _build_sam(
     encoder_embed_dim,
