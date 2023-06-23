@@ -7,7 +7,6 @@ export type Point = { x: number, y: number, label: number }
 export type Mask = { bbox: Array<number>, segmentation: string, area: number }
 export type Data = { width: number, height: number, file: File, img: HTMLImageElement }
 
-
 export function InteractiveSegment(
     { data, processing, mode, points, setPoints, masks, ready, setBoxReady }:
         {
@@ -35,6 +34,16 @@ export function InteractiveSegment(
         'blue',
         'green',
     ]
+
+    const handleCreate = (inputValue: string) => {
+        setValue(defaultOption);
+        setIsLoading(true);
+        setTimeout(() => {
+            const newOption = createOption(inputValue);
+            setIsLoading(false);
+            setOptions((prev) => [...prev, newOption]);
+        }, 1000);
+    }
 
     useEffect(() => {
         const adapterSize = () => {
