@@ -2,11 +2,14 @@ import React, { useState, useEffect, useRef } from 'react'
 import * as utils from '@/utils';
 import CreatableSelect from 'react-select/creatable';
 
-
 export type Point = { x: number, y: number, label: number }
 export type Mask = { bbox: Array<number>, segmentation: string, area: number }
 export type Data = { width: number, height: number, file: File, img: HTMLImageElement }
 
+interface Option {
+    readonly label: string;
+    readonly value: string;
+}
 const createOption = (label: string) => ({
     label,
     value: label
@@ -15,8 +18,9 @@ const createOption = (label: string) => ({
 const defaultOptions = [
     createOption('auto'),
     createOption('red'),
-    createOption('blue'),
     createOption('green'),
+    createOption('blue'),
+    createOption('yellow'),
 ]
 
 const defaultOption = createOption('auto')
@@ -40,20 +44,21 @@ export function InteractiveSegment(
     const { width, height, img } = data
     const [segments, setSegments] = useState<number[][][]>([])
     const [showSegment, setShowSegment] = useState<boolean>(true)
-    const [maskColor, setMaskColor] = useState<[]>([])
-    const [manualColor, setManualColor] = useState<boolean>(false)
+    const [maskColor, setMaskColor] = useState<Option | null>(createOption('auto'))
     const [options, setOptions] = useState(defaultOptions)
     const [isLoading, setIsLoading] = useState(false)
-    const [value, setValue] = useState<Option | null>()
 
     const handleCreate = (inputValue: string) => {
-        setValue(defaultOption);
         setIsLoading(true);
         setTimeout(() => {
             const newOption = createOption(inputValue);
             setIsLoading(false);
             setOptions((prev) => [...prev, newOption]);
         }, 1000);
+    }
+
+    const changeColor = (inputValue: Option | null) => {
+        setMaskColor(maskColor)
     }
 
     useEffect(() => {
@@ -136,16 +141,53 @@ export function InteractiveSegment(
                     continue
                 }
                 const segmentation = segments[i]
-                const rgba = rgbas[i]
-                const opacity = rgba[3]
+                // @ts-ignore
+                let rgba = []
+                let opacity = 0
+
+                switch(maskColor) {
+                    case options[0]: //auto
+                        rgba = rgbas[i]
+                        opacity = rgba[3]
+                        break
+                    case options[1]: //red
+                        rgba = rgbas[i]
+                        rgba[0] = 255
+                        rgba[1] = rgba[2] = 0
+                        opacity = rgba[3]
+                        break
+                    case options[2]: //green
+                        rgba = rgbas[i]
+                        rgba[0] = rgba[2] = 0
+                        rgba[1] = 255
+                        opacity = rgba[3]
+                        break
+                    case options[3]: //blue
+                        rgba = rgbas[i]
+                        rgba[0] = rgba[1] = 0
+                        rgba[2] = 255
+                        opacity = rgba[3]
+                        break
+                    case options[4]: //yellow
+                        rgba = rgbas[i]
+                        rgba[0] = 125
+                        rgba[1] = 125
+                        rgba[2] = 0
+                        opacity = rgba[3]
+                        break
+                }
+
                 for (let y = 0; y < canvas.height; y++) {
                     if (segmentation[y].length === 0) {
                         continue
                     }
                     for (let x of segmentation[y]) {
                         const index = (y * canvas.width + x) * 4;
+                        // @ts-ignore
                         imageData.data[index] = imageData.data[index] * opacity + rgba[0] * (1 - opacity);
+                        // @ts-ignore
                         imageData.data[index + 1] = imageData.data[index + 1] * opacity + rgba[1] * (1 - opacity);
+                        // @ts-ignore
                         imageData.data[index + 2] = imageData.data[index + 2] * opacity + rgba[2] * (1 - opacity);
                     }
                 }
@@ -218,27 +260,18 @@ export function InteractiveSegment(
                         className="ml-2"
                     />
                 </label>
-                <label className="inline-block text-sm font-medium text-gray-700">
+                <label className="inline-block text-sm font-medium text-gray-700 p-2">
                     Manual Mask Color Select:
-                    {!manualColor && (
-                        <input
-                        type="checkbox"
-                        checked={manualColor}
-                        onChange={(e) => setManualColor(e.target.checked)}
-                        className="ml-2"
-                        />
-                    )}
-                    {manualColor && (
                         <CreatableSelect
+                            className="inline-block"
                             isClearable
                             isDisabled={isLoading}
                             isLoading={isLoading}
-                            onChange={(maskColor) => setMaskColor(maskColor)}
+                            onChange={(maskColor) => changeColor(maskColor)}
                             onCreateOption={handleCreate}
                             options={options}
-                            value={value}
+                            value={maskColor}
                         />
-                    )}
                 </label>
             </div>
 
