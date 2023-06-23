@@ -7,14 +7,19 @@ export type Point = { x: number, y: number, label: number }
 export type Mask = { bbox: Array<number>, segmentation: string, area: number }
 export type Data = { width: number, height: number, file: File, img: HTMLImageElement }
 
+const createOption = (label: string) => ({
+    label,
+    value: label
+})
+
 const defaultOptions = [
-    'auto',
-    'red',
-    'blue',
-    'green',
+    createOption('auto'),
+    createOption('red'),
+    createOption('blue'),
+    createOption('green'),
 ]
 
-const defaultOption = 'auto'
+const defaultOption = createOption('auto')
 
 export function InteractiveSegment(
     { data, processing, mode, points, setPoints, masks, ready, setBoxReady }:
