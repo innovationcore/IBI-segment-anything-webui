@@ -1,11 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react'
 import * as utils from '@/utils';
-import CreatableSelect from 'react-select'
+import CreatableSelect from 'react-select/creatable';
 
 
 export type Point = { x: number, y: number, label: number }
 export type Mask = { bbox: Array<number>, segmentation: string, area: number }
 export type Data = { width: number, height: number, file: File, img: HTMLImageElement }
+
+const defaultOptions = [
+    'auto',
+    'red',
+    'blue',
+    'green',
+]
+
+const defaultOption = 'auto'
 
 export function InteractiveSegment(
     { data, processing, mode, points, setPoints, masks, ready, setBoxReady }:
@@ -28,12 +37,9 @@ export function InteractiveSegment(
     const [showSegment, setShowSegment] = useState<boolean>(true)
     const [maskColor, setMaskColor] = useState<[]>([])
     const [manualColor, setManualColor] = useState<boolean>(false)
-
-    const options = [
-        'red',
-        'blue',
-        'green',
-    ]
+    const [options, setOptions] = useState(defaultOptions)
+    const [isLoading, setIsLoading] = useState(false)
+    const [value, setValue] = useState<Option | null>()
 
     const handleCreate = (inputValue: string) => {
         setValue(defaultOption);
