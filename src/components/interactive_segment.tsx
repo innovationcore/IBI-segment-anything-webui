@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import * as utils from '@/utils';
+import CreatableSelect from 'react-select'
 
 
 export type Point = { x: number, y: number, label: number }
@@ -26,6 +27,14 @@ export function InteractiveSegment(
     const { width, height, img } = data
     const [segments, setSegments] = useState<number[][][]>([])
     const [showSegment, setShowSegment] = useState<boolean>(true)
+    const [maskColor, setMaskColor] = useState<[]>([])
+    const [manualColor, setManualColor] = useState<boolean>(false)
+
+    const options = [
+        'red',
+        'blue',
+        'green',
+    ]
 
     useEffect(() => {
         const adapterSize = () => {
@@ -188,6 +197,28 @@ export function InteractiveSegment(
                         onChange={(e) => setShowSegment(e.target.checked)}
                         className="ml-2"
                     />
+                </label>
+                <label className="inline-block text-sm font-medium text-gray-700">
+                    Manual Mask Color Select:
+                    {!manualColor && (
+                        <input
+                        type="checkbox"
+                        checked={manualColor}
+                        onChange={(e) => setManualColor(e.target.checked)}
+                        className="ml-2"
+                        />
+                    )}
+                    {manualColor && (
+                        <CreatableSelect
+                            isClearable
+                            isDisabled={isLoading}
+                            isLoading={isLoading}
+                            onChange={(maskColor) => setMaskColor(maskColor)}
+                            onCreateOption={handleCreate}
+                            options={options}
+                            value={value}
+                        />
+                    )}
                 </label>
             </div>
 
