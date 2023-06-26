@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import { useState, useEffect, useRef } from 'react'
-import { InteractiveSegment, Point, Mask, Data}
+import { InteractiveSegment, Point, Mask, Data }
   from '../components/interactive_segment'
 
 const uiBasiclClassName = 'transition-all my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 ';
@@ -37,7 +37,6 @@ function Workspace() {
   const [filename, setFilename] = useState('');
   const [imgx, setImageX] = useState('');
   const [imgy, setImageY] = useState('');
-  const [lastPointState, setLastPointState] = useState<Point[]>([]);
 
   useEffect(() => {
     if (!data) return
@@ -311,8 +310,6 @@ function Workspace() {
         y: Math.round(p.y)
       }
     })
-    //alert(JSON.stringify(points_list))
-    //let points_list = [{"x":1132,"y":1597}]
     const points_labels = points.map((p) => p.label)
     fromData.append('points', JSON.stringify(
         { points: points_list, points_labels }
@@ -566,7 +563,6 @@ function Workspace() {
               <button
                   className='false my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'
                   onClick={() => {
-                    setLastPointState(points)
                     points.pop()
                     setMasks([])
                     handleClick()

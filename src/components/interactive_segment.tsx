@@ -21,6 +21,7 @@ const defaultOptions = [
     createOption('green'),
     createOption('blue'),
     createOption('yellow'),
+    createOption('white')
 ]
 
 const defaultOption = createOption('auto')
@@ -45,6 +46,7 @@ export function InteractiveSegment(
     const [segments, setSegments] = useState<number[][][]>([])
     const [showSegment, setShowSegment] = useState<boolean>(true)
     const [maskColor, setMaskColor] = useState<Option | null>(defaultOption)
+    const [transparency, setTransparency] = useState<number>(0.5)
     const [options, setOptions] = useState(defaultOptions)
     const [isLoading, setIsLoading] = useState(false)
 
@@ -145,32 +147,34 @@ export function InteractiveSegment(
                 switch(maskColor.value) {
                     case options[0].value: //auto
                         rgba = rgbas[i]
-                        opacity = rgba[3]
+                        opacity = transparency
                         break
                     case options[1].value: //red
-                        rgba = rgbas[i]
                         rgba[0] = 255
                         rgba[1] = rgba[2] = 0
-                        opacity = 0.75
+                        opacity = transparency
                         break
                     case options[2].value: //green
-                        rgba = rgbas[i]
                         rgba[0] = rgba[2] = 0
                         rgba[1] = 255
-                        opacity = 0.75
+                        opacity = transparency
                         break
                     case options[3].value: //blue
-                        rgba = rgbas[i]
                         rgba[0] = rgba[1] = 0
                         rgba[2] = 255
-                        opacity = 0.75
+                        opacity = transparency
                         break
                     case options[4].value: //yellow
-                        rgba = rgbas[i]
                         rgba[0] = 125
                         rgba[1] = 125
                         rgba[2] = 0
-                        opacity = 0.75
+                        opacity = transparency
+                        break
+                    case options[5].value: //white
+                        rgba[0] = 255
+                        rgba[1] = 255
+                        rgba[2] = 255
+                        opacity = transparency
                         break
                 }
 
@@ -208,7 +212,7 @@ export function InteractiveSegment(
                 ctx.closePath()
             }
         }
-    }, [height, img, maskAreaThreshold, masks, mode, points, segments, showSegment, width])
+    }, [height, img, maskAreaThreshold, masks, mode, points, segments, showSegment, width, maskColor, transparency])
 
     return (
         <div
@@ -224,17 +228,13 @@ export function InteractiveSegment(
                 }
             }}
 
-            onKeyDownCapture={(e) => {
-                if (e.code === 'z') {
-                    console.log('z pressed!')
-                }
-            }}
         >
             <div className="flax justify-between w-full my-2">
-                <p className="inline-block text-sm font-medium text-gray-700">Change Slider To Tweak Segmentation</p>
+                <p className="inline-block text-lg font-medium text-gray-700">Change Slider To Tweak Segmentation</p>
                 <p></p>
                 <label className="inline-block text-sm font-medium text-gray-700">
                     Mask Area Threshold:
+                    <span className={'pl-2'}></span>
                     <input
                         type="range"
                         min={0}
@@ -257,10 +257,27 @@ export function InteractiveSegment(
                         className="ml-2"
                     />
                 </label>
-                <label className="inline-block text-sm font-medium text-gray-700 p-2">
+                <br></br>
+                <label className="inline-block text-sm font-medium text-gray-700">
+                    Mask Transparency:
+                    <span className='pl-5'></span>
+                    <input
+                        type="range"
+                        min={0}
+                        max={1}
+                        step={0.01}
+                        value={transparency}
+                        onChange={(e) => setTransparency(parseFloat(e.target.value))}
+                        className="h-2 bg-gray-300 rounded-md inline-block"
+                    />
+                    <span className="text-sm font-normal min-w-[20px] inline-block mx-2">
+                        {Math.round(transparency * 100)} %
+                    </span>
+                </label>
+                <label className="inline-block text-sm font-medium text-gray-700">
                     Manual Mask Color Select:
                         <CreatableSelect
-                            className="inline-block"
+                            className="inline-block pl-1"
                             isClearable
                             isDisabled={isLoading}
                             isLoading={isLoading}
