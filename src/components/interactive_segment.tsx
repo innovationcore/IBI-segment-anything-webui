@@ -44,7 +44,7 @@ export function InteractiveSegment(
     const { width, height, img } = data
     const [segments, setSegments] = useState<number[][][]>([])
     const [showSegment, setShowSegment] = useState<boolean>(true)
-    const [maskColor, setMaskColor] = useState<Option | null>(createOption('auto'))
+    const [maskColor, setMaskColor] = useState<Option | null>(defaultOption)
     const [options, setOptions] = useState(defaultOptions)
     const [isLoading, setIsLoading] = useState(false)
 
@@ -55,10 +55,6 @@ export function InteractiveSegment(
             setIsLoading(false);
             setOptions((prev) => [...prev, newOption]);
         }, 1000);
-    }
-
-    const changeColor = (inputValue: Option | null) => {
-        setMaskColor(maskColor)
     }
 
     useEffect(() => {
@@ -145,35 +141,36 @@ export function InteractiveSegment(
                 let rgba = []
                 let opacity = 0
 
-                switch(maskColor) {
-                    case options[0]: //auto
+                // @ts-ignore
+                switch(maskColor.value) {
+                    case options[0].value: //auto
                         rgba = rgbas[i]
                         opacity = rgba[3]
                         break
-                    case options[1]: //red
+                    case options[1].value: //red
                         rgba = rgbas[i]
                         rgba[0] = 255
                         rgba[1] = rgba[2] = 0
-                        opacity = rgba[3]
+                        opacity = 0.75
                         break
-                    case options[2]: //green
+                    case options[2].value: //green
                         rgba = rgbas[i]
                         rgba[0] = rgba[2] = 0
                         rgba[1] = 255
-                        opacity = rgba[3]
+                        opacity = 0.75
                         break
-                    case options[3]: //blue
+                    case options[3].value: //blue
                         rgba = rgbas[i]
                         rgba[0] = rgba[1] = 0
                         rgba[2] = 255
-                        opacity = rgba[3]
+                        opacity = 0.75
                         break
-                    case options[4]: //yellow
+                    case options[4].value: //yellow
                         rgba = rgbas[i]
                         rgba[0] = 125
                         rgba[1] = 125
                         rgba[2] = 0
-                        opacity = rgba[3]
+                        opacity = 0.75
                         break
                 }
 
@@ -267,7 +264,7 @@ export function InteractiveSegment(
                             isClearable
                             isDisabled={isLoading}
                             isLoading={isLoading}
-                            onChange={(maskColor) => changeColor(maskColor)}
+                            onChange={(color) => setMaskColor(color)}
                             onCreateOption={handleCreate}
                             options={options}
                             value={maskColor}

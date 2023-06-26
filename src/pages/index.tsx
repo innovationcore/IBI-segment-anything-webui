@@ -2,10 +2,6 @@ import Head from 'next/head'
 import { useState, useEffect, useRef } from 'react'
 import { InteractiveSegment, Point, Mask, Data}
   from '../components/interactive_segment'
-import {any, number} from "prop-types";
-import Jimp from "jimp";
-import * as fs from "fs";
-import {from} from "form-data";
 
 const uiBasiclClassName = 'transition-all my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 ';
 const uiActiveClassName = 'bg-blue-500 text-white';
@@ -763,7 +759,7 @@ function Workspace() {
   )
 }
 
-export default function Home() {
+export default function Home(p: any[]) {
 
   return (
     <>
