@@ -1,4 +1,6 @@
 import io
+import json
+
 import click
 import torch
 import numpy as np
@@ -134,7 +136,7 @@ def main(
         pixel_color = np.array(pixel_color)
 
         overlay = Image.fromarray(pixel_color.reshape((imgy, imgx)).astype('uint8') * 255)
-        overlay.save('overlays/' + filename + '.png', 'PNG')
+        overlay.save('dataset/' + filename + '.png', 'PNG')
 
         url = 'localhost:8000/'+filename+'.png'
         return url
@@ -142,9 +144,10 @@ def main(
     @app.post('/api/download')
     async def api_download(
             file: Annotated[bytes, File()],
-            filename: Annotated[str, Form(...)],
+            overlay_filename: Annotated[str, Form(...)],
             imgx: Annotated[str, Form(...)],
             imgy: Annotated[str, Form(...)],
+            points_filename: Annotated[str, Form(...)],
             points: Annotated[str, Form(...)],
     ):
         ps = Points.parse_raw(points)
@@ -163,9 +166,19 @@ def main(
 
         x_dim = re.split('{|:|}|"', imgx)
         y_dim = re.split('{|:|}|"', imgy)
-        file_name = re.split('{|:|}|"', filename)
 
-        url = generate_overlay(compress_mask(np.array(masks[2])), int(x_dim[5]), int(y_dim[5]), file_name[5])
+        of_dict = json.loads(overlay_filename)
+        url = generate_overlay(compress_mask(np.array(masks[2])), int(x_dim[5]), int(y_dim[5]), of_dict['filename'])
+
+        with open('filenames.txt', 'w', encoding='utf-8') as f:
+            f.write(overlay_filename)
+            f.write(points_filename)
+
+        pf_dict = json.loads(points_filename)
+        points_dict = json.loads(points)
+        with open('dataset/' + pf_dict['filename'] + '.json', 'w', encoding='utf-8') as f:
+            json.dump(points_dict, f)
+
         return {"code": 0, "data": url}
 
     #Inserts points sent here in the form of a valid JSON object which is produced by the frontend

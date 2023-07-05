@@ -3,7 +3,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: src/Dockerfile
     ports:
       - "3000:3000"
     depends_on:
@@ -16,7 +16,7 @@ services:
   server:
     build:
       context: .
-      dockerfile: Dockerfile.server
+      dockerfile: scripts/Dockerfile
     deploy:
         resources:
           reservations:

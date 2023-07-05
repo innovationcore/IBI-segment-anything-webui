@@ -183,8 +183,8 @@ function Workspace() {
     if (!data) return
     const fromData = new FormData()
     fromData.append('file', new File([data.file], 'image.png'))
-    fromData.append('filename', JSON.stringify({
-      file_name: filename.split('.')[0]+"_overlay"
+    fromData.append('overlay_filename', JSON.stringify({
+      filename: filename.split('.')[0]+"_overlay"
     }))
     fromData.append('x_dimension', JSON.stringify({
           x_dim: imgx
@@ -198,10 +198,16 @@ function Workspace() {
           y: Math.round(p.y)
         }
       })
+    fromData.append('points_filename', JSON.stringify({
+      filename: filename.split('.')[0]+"_points"
+    }))
     const points_labels = points.map((p) => p.label)
       fromData.append('points', JSON.stringify(
         { points: points_list, points_labels }
       ))
+
+    console.log(filename)
+    console.log(filename.split('.')[0]+"_points")
 
     controller.current?.abort()
     controller.current = new AbortController()
