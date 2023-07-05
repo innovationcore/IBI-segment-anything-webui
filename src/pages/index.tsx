@@ -397,17 +397,6 @@ function Workspace() {
               </div>
               <div className={uiBasiclClassName}>
                 <p>Get Segment from JSON</p>
-                <textarea className='w-full h-20 outline outline-gray-200 p-1'
-                  onChange={(e) => {
-                    setJSONPrompt(e.target.value)
-                  }}
-                  value={json_prompt} />
-                <button
-                  className='my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 bg-white hover:bg-blue-500 hover:text-white'
-                  onClick={handleCopyPaste}
-                >
-                  Paste Points JSON
-                </button>
                 <button
                     className='my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 bg-white hover:bg-blue-500 hover:text-white'
                     onClick={() => {
@@ -441,107 +430,14 @@ function Workspace() {
               </div>
               {masks.length > 0 && (
                 <div className={uiBasiclClassName}>
-                  <p>Download Results</p>
-                  <button
-                    className={uiBasiclClassName}
-                    onClick={(e) => {
-                      var datastr = "data:text/json;charset=utf-8," + encodeURIComponent(
-                        JSON.stringify({
-                          masks: masks,
-                          points: points,
-                        }));
-                      var downloadAnchorNode = document.createElement('a');
-                      downloadAnchorNode.setAttribute("href", datastr);
-                      downloadAnchorNode.setAttribute("download", filename.split('.')[0]+"_masks_points.json");
-                      document.body.appendChild(downloadAnchorNode); // required for firefox
-                      downloadAnchorNode.click();
-                      downloadAnchorNode.remove();
-                    }}
-                  >
-                    Download Combined Result
-                  </button>
-                  <button
-                    className={uiBasiclClassName}
-                    onClick={(e) => {
-                      var datastr = "data:text/json;charset=utf-8," + encodeURIComponent(
-                        JSON.stringify({
-                          points: points,
-                        }));
-                      var downloadAnchorNode = document.createElement('a');
-                      downloadAnchorNode.setAttribute("href", datastr);
-                      downloadAnchorNode.setAttribute("download", filename.split('.')[0]+"_points.json");
-                      document.body.appendChild(downloadAnchorNode); // required for firefox
-                      downloadAnchorNode.click();
-                      downloadAnchorNode.remove();
-                    }}
-                  >
-                    Download Points JSON
-                  </button>
-                  <button
-                    className={uiBasiclClassName}
-                    onClick={(e) => {
-                      var datastr = "data:text/json;charset=utf-8," + encodeURIComponent(
-                        JSON.stringify({
-                          masks: masks,
-                        }));
-                      var downloadAnchorNode = document.createElement('a');
-                      downloadAnchorNode.setAttribute("href", datastr);
-                      downloadAnchorNode.setAttribute("download", filename.split('.')[0]+"_masks.json");
-                      document.body.appendChild(downloadAnchorNode); // required for firefox
-                      downloadAnchorNode.click();
-                      downloadAnchorNode.remove();
-                    }}
-                  >
-                    Download Masks as JSON
-                  </button>
+                  <p>Save Progress</p>
                   <button
                     className={uiBasiclClassName}
                     onClick={handleDownload}
                   >
-                    Download Overlay as PNG
+                    Download Results
                   </button>
                 </div>
-              )}
-              {masks.length > 0 && (
-              <div className={uiBasiclClassName}>
-                <div>
-                  <p>Copy Results</p>
-                  <button
-                      className={uiBasiclClassName}
-                      onClick={(e) => {
-                        navigator.clipboard.writeText(JSON.stringify({
-                          points: points,
-                        }))
-                        Popup('Copied', 1000)
-                      }}
-                  >
-                    Copy Points JSON
-                  </button>
-                  <button
-                      className={uiBasiclClassName}
-                      onClick={(e) => {
-                        navigator.clipboard.writeText(JSON.stringify({
-                          masks: masks,
-                          points: points,
-                        }))
-                        Popup('Copied', 1000)
-                      }}
-                  >
-                    Copy Combined Result
-                  </button>
-                  <button
-                      className={uiBasiclClassName}
-                      onClick={(e) => {
-                        navigator.clipboard.writeText(JSON.stringify({
-                          masks: masks,
-                        }))
-                        Popup('Copied', 1000)
-                      }}
-                  >
-                    Copy Masks as JSON
-                  </button>
-                </div>
-              </div>
               )}
             </div>
             <div className={uiBasiclClassName}>
