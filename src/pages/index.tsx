@@ -1,5 +1,6 @@
 import Head from 'next/head'
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import CreatableSelect from 'react-select/creatable';
 import { InteractiveSegment, Point, Mask, Data }
   from '../components/interactive_segment'
 
@@ -24,6 +25,22 @@ function Popup(text: string, timeout: number = 1000) {
   }, timeout)
 }
 
+interface Option {
+  readonly label: string;
+  readonly value: string;
+}
+
+const createOption = (label: string) => ({
+  label,
+  value: label
+})
+
+const defaultOption = createOption('Error. No Image UUIDs available.')
+
+const defaultOptions = [ //typically you need to do this ^
+    defaultOption,
+]
+
 function Workspace() {
   const [data, setData] = useState<Data | null>(null)
   const [mode, setMode] = useState<'click' | 'box' | 'everything'>('click')
@@ -37,6 +54,9 @@ function Workspace() {
   const [filename, setFilename] = useState('');
   const [imgx, setImageX] = useState('');
   const [imgy, setImageY] = useState('');
+  const [UUID, setUUID] = useState<Option | null>(defaultOption);
+  const [options, setOptions] = useState(defaultOptions);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (!data) return
@@ -226,6 +246,15 @@ function Workspace() {
     })
   }
 
+  const handleCreate = (inputValue: string) => {
+    setIsLoading(true);
+    setTimeout(() => {
+      const newOption = createOption(inputValue);
+      setIsLoading(false);
+      setOptions((prev) => [...prev, newOption]);
+    }, 1000);
+  }
+
   //Contains methods to accept the point JSON output and convert it to rendered points and
   //segmentations on screen
   const handleCopyPaste = () => {
@@ -348,6 +377,20 @@ function Workspace() {
           <div className='p-4 pt-5'>
             <p className='text-lg font-semibold'>Tools</p>
             <div>
+              <div className={uiBasiclClassName}>
+                <label>Processed Images:
+                  <CreatableSelect
+                      className="inline-block pl-1"
+                      isClearable
+                      isDisabled={isLoading}
+                      isLoading={isLoading}
+                      onChange={(id) => setUUID(id)}
+                      onCreateOption={handleCreate}
+                      options={options}
+                      value={UUID}
+                  />
+                </label>
+              </div>
               <div className={uiBasiclClassName}>
                 <p>Interactive Mode</p>
                 <div>
@@ -666,12 +709,8 @@ export default function Home(p: any[]) {
         <meta name="description" content="Image Segment" />
       </Head>
       <main className="flex-col min-h-full">
-        <div className="flex items-center border-b-[1px] pt-3 pb-3">
-          <h1 className="m-2 text-xl font-bold leading-tight md:mx-6 lg:text-2xl">Image Segment</h1>
-          <div className='hidden ml-auto md:flex [&>*]:flex [&>*]:items-center min-h-full'>
-            <p className="mr-10 font-medium text-base text-gray-600">Segment Medical Images in Browser</p>
-          </div>
-        </div>
+        <p className="m-2 text-xl font-bold leading-tight md:mx-6 lg:text-2xl">Segment Medical Images in Browser</p>
+        <div className="flex items-center border-b-[1px] pt-3 pb-3"></div>
         <Workspace />
       </main>
     </>

@@ -141,6 +141,14 @@ def main(
         url = 'localhost:8000/'+filename+'.png'
         return url
 
+    # Gets a UUID from the dropdown on the frontend, then checks for that UUID on the Template Site DB, returns a byte string for the image, it gets reconstructed and displayed on the front
+    @app.post('/api/open')
+    async def api_open(
+            uuid: Annotated[str, Form(...)],
+            file: Annotated[bytes, File()], #not sure how this might work yet, but if we need to pull the image from somewhere else, we can push the bytes of the file and reconstruct on the frontend, reverse of how it's done right now
+    ):
+        return {"code": 0, "data": [uuid, file]} #returns the filename of the file we want to upload
+
     @app.post('/api/download')
     async def api_download(
             file: Annotated[bytes, File()],
