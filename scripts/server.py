@@ -1,3 +1,5 @@
+import requests
+
 import io
 import json
 
@@ -136,10 +138,9 @@ def main(
         pixel_color = np.array(pixel_color)
 
         overlay = Image.fromarray(pixel_color.reshape((imgy, imgx)).astype('uint8') * 255)
-        overlay.save('dataset/' + filename + '.png', 'PNG')
+        overlay_stream = overlay.tobytes() # creates the encoded bytestream which can be rebuilt on the php side
 
-        url = 'localhost:8000/'+filename+'.png'
-        return url
+        return overlay_stream
 
     # Gets a UUID from the dropdown on the frontend, then checks for that UUID on the Template Site DB, returns a byte string for the image, it gets reconstructed and displayed on the front
     @app.post('/api/open')
@@ -176,18 +177,31 @@ def main(
         y_dim = re.split('{|:|}|"', imgy)
 
         of_dict = json.loads(overlay_filename)
-        url = generate_overlay(compress_mask(np.array(masks[2])), int(x_dim[5]), int(y_dim[5]), of_dict['filename'])
+
+        pf_dict = json.loads(points_filename)
+        points_dict = json.loads(points)
+
+        template_url = "http://localhost:8080/root/sam/download.php" #maybe??
+
+        overlay_data = generate_overlay(compress_mask(np.array(masks[2])), int(x_dim[5]), int(y_dim[5]), of_dict['filename'])
+
+        r = requests.post(url=template_url, params={"image_data":file, "image_x":imgx, "image_y":imgy, "overlay_filename":overlay_filename, "overlay_data":overlay_data,
+                                                   "points_filename":points_filename, "points":points}) #i think that these need processing otherwise it's like double JSONing
+
+        # Deprecated code which generates and saves the image and file here on the python server, but we wanna push the files
+        # over to the php side instead.
+
+        '''url = generate_overlay(compress_mask(np.array(masks[2])), int(x_dim[5]), int(y_dim[5]), of_dict['filename'])
 
         with open('filenames.txt', 'w', encoding='utf-8') as f:
             f.write(overlay_filename)
             f.write(points_filename)
 
-        pf_dict = json.loads(points_filename)
-        points_dict = json.loads(points)
-        with open('dataset/' + pf_dict['filename'] + '.json', 'w', encoding='utf-8') as f:
-            json.dump(points_dict, f)
 
-        return {"code": 0, "data": url}
+        with open('dataset/' + pf_dict['filename'] + '.json', 'w', encoding='utf-8') as f:
+            json.dump(points_dict, f)'''
+
+        return {"code": 0, "data": 'Saved data to Template Server successfully!'}
 
     #Inserts points sent here in the form of a valid JSON object which is produced by the frontend
     @app.post('/api/copy-paste')
