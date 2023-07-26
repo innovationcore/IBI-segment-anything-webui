@@ -143,12 +143,21 @@ def main(
         return overlay_stream
 
     # Gets a UUID from the dropdown on the frontend, then checks for that UUID on the Template Site DB, returns a byte string for the image, it gets reconstructed and displayed on the front
-    @app.post('/api/open')
+    @app.post('/api/upload')
     async def api_open(
             uuid: Annotated[str, Form(...)],
-            file: Annotated[bytes, File()], #not sure how this might work yet, but if we need to pull the image from somewhere else, we can push the bytes of the file and reconstruct on the frontend, reverse of how it's done right now
+            file: Annotated[bytes, File()], # not sure how this might work yet, but if we need to pull the image from somewhere else, we can push the bytes of the file and reconstruct on the frontend, reverse of how it's done right now
     ):
-        return {"code": 0, "data": [uuid, file]} #returns the filename of the file we want to upload
+        return {"code": 0, "data": [uuid, file]} # returns the filename of the file we want to upload
+
+    # Gets the UUIDs in the php site and sends it to the react frontend to allow choosing predefined files
+    @app.post('/api/populate')
+    async def api_populate(
+        filenames: Annotated[str, Form(...)]
+    ):
+        available_files = json.loads(filenames)
+
+        return {"code": 0, "data": available_files["filenames"]} # returns a list of filenames which function as UUIDs corresponding to available checkpoints on the php side
 
     @app.post('/api/download')
     async def api_download(
@@ -181,11 +190,12 @@ def main(
         pf_dict = json.loads(points_filename)
         points_dict = json.loads(points)
 
-        template_url = "http://localhost:8080/root/sam/download.php" #maybe??
+        storage_url = "http://localhost:8090/save_image" #maybe??
 
         overlay_data = generate_overlay(compress_mask(np.array(masks[2])), int(x_dim[5]), int(y_dim[5]), of_dict['filename'])
 
-        r = requests.post(url=template_url, params={"image_data":file, "image_x":imgx, "image_y":imgy, "overlay_filename":overlay_filename, "overlay_data":overlay_data,
+        r = requests.post(url=storage_url, params={"image_data":file, "image_x":imgx, "image_y":imgy,
+                                                   "overlay_filename":overlay_filename, "overlay_data":overlay_data,
                                                    "points_filename":points_filename, "points":points}) #i think that these need processing otherwise it's like double JSONing
 
         # Deprecated code which generates and saves the image and file here on the python server, but we wanna push the files
@@ -201,7 +211,7 @@ def main(
         with open('dataset/' + pf_dict['filename'] + '.json', 'w', encoding='utf-8') as f:
             json.dump(points_dict, f)'''
 
-        return {"code": 0, "data": 'Saved data to Template Server successfully!'}
+        return {"code": 0, "data": r.json()} # r.json() is the response we get from requests.post(), so this can give us nice error messages and whatever else
 
     #Inserts points sent here in the form of a valid JSON object which is produced by the frontend
     @app.post('/api/copy-paste')

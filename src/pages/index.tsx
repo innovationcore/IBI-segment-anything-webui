@@ -232,7 +232,7 @@ function Workspace() {
     controller.current?.abort()
     controller.current = new AbortController()
     setProcessing(true)
-    fetch('/sam/api/download', {
+    fetch('localhost:8080/root/sam/download.php', { //send it to the download api for the template site
       method: 'POST',
       body: fromData,
       signal: controller.current?.signal
@@ -271,8 +271,6 @@ function Workspace() {
         y: Math.round(p.y)
       }
     })
-    //alert(JSON.stringify(points_list))
-    //let points_list = [{"x":1132,"y":1597}]
     const points_labels = points.map((p) => p.label)
 
     fromData.append('file', new File([data.file], 'image.png'))
