@@ -32,6 +32,7 @@ export default async function handler(
     const readStream = await fs.readFile(filepath)
     const req_data = new FormData()
     req_data.append('file', new Blob([readStream]), 'image')
+    req_data.append('filename', fields['filename'] as string)
     req_data.append('overlay_filename', fields['overlay_filename'] as string)
     req_data.append('imgx', fields['x_dimension'] as string)
     req_data.append('imgy', fields['y_dimension'] as string)

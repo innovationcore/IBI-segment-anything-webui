@@ -167,6 +167,7 @@ def main(
     @app.post('/api/download')
     async def api_download(
             file: Annotated[bytes, File()],
+            filename: Annotated[str, Form(...)],
             overlay_filename: Annotated[str, Form(...)],
             imgx: Annotated[str, Form(...)],
             imgy: Annotated[str, Form(...)],
@@ -190,6 +191,8 @@ def main(
         x_dim = re.split('{|:|}|"', imgx)
         y_dim = re.split('{|:|}|"', imgy)
 
+        filename_dict = json.loads(filename)
+
         of_dict = json.loads(overlay_filename)
 
         pf_dict = json.loads(points_filename)
@@ -199,9 +202,9 @@ def main(
 
         overlay_data = generate_overlay(compress_mask(np.array(masks[2])), int(x_dim[5]), int(y_dim[5]), of_dict['filename'])
 
-        r = requests.post(url=storage_url, params={"image_data":file, "image_x":imgx, "image_y":imgy,
+        r = requests.post(url=storage_url, params={"image_data":file, "filename": filename_dict['filename'], "image_x":imgx, "image_y":imgy,
                                                    "overlay_filename":overlay_filename, "overlay_data":overlay_data,
-                                                   "points_filename":pf_dict['filename'], "points":points_dict['points']}) #i think that these need processing otherwise it's like double JSONing
+                                                   "points_filename":pf_dict['filename'], "points":points_dict['points', 'points_labels']}) #i think that these need processing otherwise it's like double JSONing
 
         # Deprecated code which generates and saves the image and file here on the python server, but we wanna push the files
         # over to the php side instead.

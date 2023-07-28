@@ -203,6 +203,9 @@ function Workspace() {
     if (!data) return
     const fromData = new FormData()
     fromData.append('file', new File([data.file], 'image.png'))
+    fromData.append('filename', JSON.stringify({
+      filename: filename
+    }))
     fromData.append('overlay_filename', JSON.stringify({
       filename: filename.split('.')[0]+"_overlay"
     }))
