@@ -1,3 +1,5 @@
+import base64
+
 import requests
 
 import io
@@ -137,8 +139,11 @@ def main(
 
         pixel_color = np.array(pixel_color)
 
+        output = BytesIO()
+
         overlay = Image.fromarray(pixel_color.reshape((imgy, imgx)).astype('uint8') * 255)
-        overlay_stream = overlay.tobytes() # creates the encoded bytestream which can be rebuilt on the php side
+        overlay.save(output, format="JPEG")
+        overlay_stream = base64.b64decode(output.getvalue()) # creates the b64 encoded image to be rebuilt on the php side
 
         return overlay_stream
 
@@ -196,7 +201,7 @@ def main(
 
         r = requests.post(url=storage_url, params={"image_data":file, "image_x":imgx, "image_y":imgy,
                                                    "overlay_filename":overlay_filename, "overlay_data":overlay_data,
-                                                   "points_filename":points_filename, "points":points}) #i think that these need processing otherwise it's like double JSONing
+                                                   "points_filename":pf_dict['filename'], "points":points_dict['points']}) #i think that these need processing otherwise it's like double JSONing
 
         # Deprecated code which generates and saves the image and file here on the python server, but we wanna push the files
         # over to the php side instead.

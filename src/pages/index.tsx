@@ -232,7 +232,7 @@ function Workspace() {
     controller.current?.abort()
     controller.current = new AbortController()
     setProcessing(true)
-    fetch('localhost:8080/root/sam/download.php', { //send it to the download api for the template site
+    fetch('/sam/api/download', { //send it to the download api for the template site
       method: 'POST',
       body: fromData,
       signal: controller.current?.signal
