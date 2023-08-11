@@ -10,8 +10,8 @@ services:
       - server
     environment:
       - API_URL=http://server:8000
-    networks:
-      - sam-network
+    volumes:
+      - ../src/:/var/www/html
 
   server:
     build:
@@ -26,9 +26,10 @@ services:
                capabilities: [gpu]
     ports:
       - "8000:8000"
-    networks:
-      - sam-network
+    volumes:
+      - ../:/var/opt/
 
 networks:
-  sam-network:
-    driver: bridge
+  default:
+    external:
+      name: sam-network

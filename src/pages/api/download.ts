@@ -34,8 +34,8 @@ export default async function handler(
     req_data.append('file', new Blob([readStream]), 'image')
     req_data.append('filename', fields['filename'] as string)
     req_data.append('overlay_filename', fields['overlay_filename'] as string)
-    req_data.append('imgx', fields['x_dimension'] as string)
-    req_data.append('imgy', fields['y_dimension'] as string)
+    req_data.append('imgx', fields['imgx'] as string)
+    req_data.append('imgy', fields['imgy'] as string)
     req_data.append('points_filename', fields['points_filename'] as string)
     req_data.append('points', fields['points'] as string)
 

@@ -20,7 +20,6 @@ from segment_anything import SamPredictor, SamAutomaticMaskGenerator, sam_model_
 from PIL import Image
 from typing_extensions import Annotated
 from threading import Lock
-from io import BytesIO
 
 
 
@@ -138,14 +137,12 @@ def main(
             i += 1
 
         pixel_color = np.array(pixel_color)
-
-        output = BytesIO()
-
         overlay = Image.fromarray(pixel_color.reshape((imgy, imgx)).astype('uint8') * 255)
-        overlay.save(output, format="JPEG")
-        overlay_stream = base64.b64decode(output.getvalue()) # creates the b64 encoded image to be rebuilt on the php side
 
-        return overlay_stream
+        output = io.BytesIO()
+        overlay.save(output, format="JPEG")
+
+        return output.getvalue()
 
     # Gets a UUID from the dropdown on the frontend, then checks for that UUID on the Template Site DB, returns a byte string for the image, it gets reconstructed and displayed on the front
     @app.post('/api/upload')
@@ -188,38 +185,34 @@ def main(
             )
             predictor.reset_image()
 
-        x_dim = re.split('{|:|}|"', imgx)
-        y_dim = re.split('{|:|}|"', imgy)
-
-        filename_dict = json.loads(filename)
+        x_dict = json.loads(imgx)
+        y_dict = json.loads(imgy)
 
         of_dict = json.loads(overlay_filename)
 
-        pf_dict = json.loads(points_filename)
-        points_dict = json.loads(points)
+        # These two links will have to be updated later when they are made public
+        point_storage_url = "http://host.docker.internal:8090/api/save_json"
+        img_storage_url = "http://host.docker.internal:8090/api/save_image"
 
-        storage_url = "http://localhost:8090/save_image" #maybe??
+        overlay = generate_overlay(compress_mask(np.array(masks[2])), int(x_dict['x_dim']), int(y_dict['y_dim']), of_dict['filename'])
 
-        overlay_data = generate_overlay(compress_mask(np.array(masks[2])), int(x_dim[5]), int(y_dim[5]), of_dict['filename'])
+        # Store the JSON file which replicates the segmentation
+        payload = {
+            'points_filename': json.loads(points_filename)['filename'],
+            'points': json.loads(points),
+        }
+        print(payload)
+        pr = requests.post(url=point_storage_url, json=payload)
 
-        r = requests.post(url=storage_url, params={"image_data":file, "filename": filename_dict['filename'], "image_x":imgx, "image_y":imgy,
-                                                   "overlay_filename":overlay_filename, "overlay_data":overlay_data,
-                                                   "points_filename":pf_dict['filename'], "points":points_dict['points', 'points_labels']}) #i think that these need processing otherwise it's like double JSONing
+        # Store the Image we segmented
+        image = {"file": (json.loads(filename)['filename'], file, 'image/jpeg')}
+        ir = requests.post(url=img_storage_url, files=image)
 
-        # Deprecated code which generates and saves the image and file here on the python server, but we wanna push the files
-        # over to the php side instead.
+        # Store the Overlay we created from the segmentation
+        ovr_image = {"file": (json.loads(overlay_filename)['filename'], overlay, 'image/jpeg')}
+        ovr = requests.post(url=img_storage_url, files=ovr_image)
 
-        '''url = generate_overlay(compress_mask(np.array(masks[2])), int(x_dim[5]), int(y_dim[5]), of_dict['filename'])
-
-        with open('filenames.txt', 'w', encoding='utf-8') as f:
-            f.write(overlay_filename)
-            f.write(points_filename)
-
-
-        with open('dataset/' + pf_dict['filename'] + '.json', 'w', encoding='utf-8') as f:
-            json.dump(points_dict, f)'''
-
-        return {"code": 0, "data": r.json()} # r.json() is the response we get from requests.post(), so this can give us nice error messages and whatever else
+        return {"code": 0, "Points Response": pr.text, "Image Response": ir.text, 'Overlay Response': ovr.text} # r.json() is the response we get from requests.post(), so this can give us nice error messages and whatever else
 
     #Inserts points sent here in the form of a valid JSON object which is produced by the frontend
     @app.post('/api/copy-paste')

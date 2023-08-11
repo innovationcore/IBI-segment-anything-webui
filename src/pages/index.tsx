@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import React, { useState, useEffect, useRef } from 'react'
 import CreatableSelect from 'react-select/creatable';
-import { InteractiveSegment, Point, Mask, Data }
+import { InteractiveSegment, Point, Mask, Data, }
   from '../components/interactive_segment'
 
 const uiBasiclClassName = 'transition-all my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 ';
@@ -207,13 +207,16 @@ function Workspace() {
       filename: filename
     }))
     fromData.append('overlay_filename', JSON.stringify({
-      filename: filename.split('.')[0]+"_overlay"
+      filename: filename.split('.')[0]+"_overlay.jpg"
     }))
-    fromData.append('x_dimension', JSON.stringify({
+    fromData.append('imgx', JSON.stringify({
           x_dim: imgx
     }))
-    fromData.append('y_dimension', JSON.stringify({
+    fromData.append('imgy', JSON.stringify({
           y_dim: imgy
+    }))
+    fromData.append('points_filename', JSON.stringify({
+      filename: filename.split('.')[0]+"_points.json"
     }))
     const points_list = points.map((p) => {
         return {
@@ -221,16 +224,10 @@ function Workspace() {
           y: Math.round(p.y)
         }
       })
-    fromData.append('points_filename', JSON.stringify({
-      filename: filename.split('.')[0]+"_points"
-    }))
     const points_labels = points.map((p) => p.label)
       fromData.append('points', JSON.stringify(
         { points: points_list, points_labels }
       ))
-
-    console.log(filename)
-    console.log(filename.split('.')[0]+"_points")
 
     controller.current?.abort()
     controller.current = new AbortController()
@@ -377,21 +374,8 @@ function Workspace() {
         <div className='shadow-[0px_0px_5px_5px_#00000024] rounded-xl mx-2'>
           <div className='p-4 pt-5'>
             <p className='text-lg font-semibold'>Tools</p>
-            <div>
-              <div className={uiBasiclClassName}>
-                <label>Processed Images:
-                  <CreatableSelect
-                      className="inline-block pl-1"
-                      isClearable
-                      isDisabled={isLoading}
-                      isLoading={isLoading}
-                      onChange={(id) => setUUID(id)}
-                      onCreateOption={handleCreate}
-                      options={options}
-                      value={UUID}
-                  />
-                </label>
-              </div>
+
+              <div className={uiBasiclClassName}></div>
               <div className={uiBasiclClassName}>
                 <p>Interactive Mode</p>
                 <div>
@@ -483,7 +467,6 @@ function Workspace() {
                   </button>
                 </div>
               )}
-            </div>
             <div className={uiBasiclClassName}>
               <p>Interactive Setting</p>
               <button
