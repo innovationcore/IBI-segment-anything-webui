@@ -12,6 +12,8 @@ services:
       - API_URL=http://server:8000
     volumes:
       - ../src/:/var/www/html
+    networks:
+      - sam-network
 
   server:
     build:
@@ -28,8 +30,10 @@ services:
       - "8000:8000"
     volumes:
       - ../:/var/opt/
+    networks:
+      - sam-network
 
 networks:
-  default:
+  sam-network:
     external:
       name: sam-network

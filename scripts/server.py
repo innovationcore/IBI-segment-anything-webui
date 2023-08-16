@@ -12,7 +12,7 @@ import uvicorn
 import clip #ensure you are installing the CLIP.git not the clip package
 import re
 
-from fastapi import FastAPI, File, Form
+from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Sequence, Callable
@@ -193,6 +193,7 @@ def main(
         # These two links will have to be updated later when they are made public
         point_storage_url = "http://host.docker.internal:8090/api/save_json"
         img_storage_url = "http://host.docker.internal:8090/api/save_image"
+        ovr_storage_url = "http://host.docker.internal:8090/api/save_overlay"
 
         overlay = generate_overlay(compress_mask(np.array(masks[2])), int(x_dict['x_dim']), int(y_dict['y_dim']), of_dict['filename'])
 
@@ -210,9 +211,22 @@ def main(
 
         # Store the Overlay we created from the segmentation
         ovr_image = {"file": (json.loads(overlay_filename)['filename'], overlay, 'image/jpeg')}
-        ovr = requests.post(url=img_storage_url, files=ovr_image)
+        ovr = requests.post(url=ovr_storage_url, files=ovr_image)
 
         return {"code": 0, "Points Response": pr.text, "Image Response": ir.text, 'Overlay Response': ovr.text} # r.json() is the response we get from requests.post(), so this can give us nice error messages and whatever else
+
+    # Will generate a page with an image already open
+    @app.get('/api/display')
+    async def api_display(
+            file: UploadFile = File(...)
+    ):
+
+        file_details = {
+            'filename': file.filename,
+            'file': file.file
+        }
+
+        return {'code': 0, 'data': file_details}
 
     #Inserts points sent here in the form of a valid JSON object which is produced by the frontend
     @app.post('/api/copy-paste')

@@ -25,22 +25,6 @@ function Popup(text: string, timeout: number = 1000) {
   }, timeout)
 }
 
-interface Option {
-  readonly label: string;
-  readonly value: string;
-}
-
-const createOption = (label: string) => ({
-  label,
-  value: label
-})
-
-const defaultOption = createOption('Error. No Image UUIDs available.')
-
-const defaultOptions = [ //typically you need to do this ^
-    defaultOption,
-]
-
 function Workspace() {
   const [data, setData] = useState<Data | null>(null)
   const [mode, setMode] = useState<'click' | 'box' | 'everything'>('click')
@@ -54,10 +38,10 @@ function Workspace() {
   const [filename, setFilename] = useState('');
   const [imgx, setImageX] = useState('');
   const [imgy, setImageY] = useState('');
-  const [UUID, setUUID] = useState<Option | null>(defaultOption);
-  const [options, setOptions] = useState(defaultOptions);
   const [isLoading, setIsLoading] = useState(false);
+  const [isAPIAccessed, setAPIAccessed] = useState(false);
 
+  // Handles all the point functions
   useEffect(() => {
     if (!data) return
     if (mode === 'click' && points.length > 0) {
@@ -246,15 +230,6 @@ function Workspace() {
     })
   }
 
-  const handleCreate = (inputValue: string) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      const newOption = createOption(inputValue);
-      setIsLoading(false);
-      setOptions((prev) => [...prev, newOption]);
-    }, 1000);
-  }
-
   //Contains methods to accept the point JSON output and convert it to rendered points and
   //segmentations on screen
   const handleCopyPaste = () => {
@@ -374,8 +349,6 @@ function Workspace() {
         <div className='shadow-[0px_0px_5px_5px_#00000024] rounded-xl mx-2'>
           <div className='p-4 pt-5'>
             <p className='text-lg font-semibold'>Tools</p>
-
-              <div className={uiBasiclClassName}></div>
               <div className={uiBasiclClassName}>
                 <p>Interactive Mode</p>
                 <div>
