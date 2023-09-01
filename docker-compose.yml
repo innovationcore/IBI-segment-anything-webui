@@ -11,7 +11,7 @@ services:
     environment:
       - API_URL=http://server:8000
     volumes:
-      - ../src/:/var/www/html
+      - ../src/:/app/src
     networks:
       - sam-network
 
@@ -29,7 +29,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ../:/var/opt/
+      - ../:/app/scripts
     networks:
       - sam-network
 

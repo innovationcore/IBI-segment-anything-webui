@@ -562,6 +562,7 @@ function Workspace() {
               <button //this would be a good place to put an image converter that changes DICOM to png. This can be done using pngjs
                 className="transition-all false max-h-[40px] my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 false false"
                 onClick={() => {
+                  setImageLoaded(true)
                   const input = document.createElement('input')
                   input.type = 'file'
                   input.accept = 'image/*'
