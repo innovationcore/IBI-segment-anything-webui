@@ -192,9 +192,9 @@ def main(
         of_dict = json.loads(overlay_filename)
 
         # These two links will have to be updated later when they are made public
-        point_storage_url = "http://host.docker.internal:8090/api/save_json"
-        img_storage_url = "http://host.docker.internal:8090/api/save_image"
-        ovr_storage_url = "http://host.docker.internal:8090/api/save_overlay"
+        point_storage_url = "http://localhost:8090/api/save_json"
+        img_storage_url = "http://localhost:8090/api/save_image"
+        ovr_storage_url = "http://localhost:8090/api/save_overlay"
 
         overlay = generate_overlay(compress_mask(np.array(masks[2])), int(x_dict['x_dim']), int(y_dict['y_dim']), of_dict['filename'])
 
@@ -255,7 +255,7 @@ def main(
         uuid = uuid_dict['UUID']
         print(uuid_dict)
         print(uuid)
-        url = f'http://host.docker.internal:8090/api/get/{uuid}'
+        url = f'http://localhost:8090/api/get/{uuid}'
         r = requests.get(url)
         retdict = r.json()
         print(retdict)

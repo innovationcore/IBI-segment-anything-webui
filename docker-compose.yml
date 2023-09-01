@@ -28,12 +28,9 @@ services:
                capabilities: [gpu]
     ports:
       - "8000:8000"
-    volumes:
-      - ../:/app/scripts
     networks:
       - sam-network
 
 networks:
   sam-network:
-    external:
-      name: sam-network
+      driver: bridge
