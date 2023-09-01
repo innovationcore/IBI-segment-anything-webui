@@ -37,7 +37,7 @@ export function InteractiveSegment(
             masks: Mask[],
             ready: boolean,
             setPoints: (points: Point[]) => void,
-            setBoxReady: (ready: boolean) => void
+            setBoxReady: (ready: boolean) => void,
         }) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const [scale, setScale] = useState<number>(1)

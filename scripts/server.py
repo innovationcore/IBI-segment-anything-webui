@@ -161,6 +161,7 @@ def main(
 
         return {"code": 0, "data": available_files["filenames"]} # returns a list of filenames which function as UUIDs corresponding to available checkpoints on the php side
 
+    # Downloads image, points, and overlay to the database
     @app.post('/api/download')
     async def api_download(
             file: Annotated[bytes, File()],
@@ -215,20 +216,7 @@ def main(
 
         return {"code": 0, "Points Response": pr.text, "Image Response": ir.text, 'Overlay Response': ovr.text} # r.json() is the response we get from requests.post(), so this can give us nice error messages and whatever else
 
-    # Will generate a page with an image already open
-    @app.get('/api/display')
-    async def api_display(
-            file: UploadFile = File(...)
-    ):
-
-        file_details = {
-            'filename': file.filename,
-            'file': file.file
-        }
-
-        return {'code': 0, 'data': file_details}
-
-    #Inserts points sent here in the form of a valid JSON object which is produced by the frontend
+    # Inserts points sent here in the form of a valid JSON object which is produced by the frontend
     @app.post('/api/copy-paste')
     async def api_insert(
             file: Annotated[bytes, File()],
@@ -258,6 +246,23 @@ def main(
         ]
         masks = sorted(masks, key=lambda x: x['stability_score'], reverse=True)
         return {"code": 0, "data": masks[:]}
+
+    @app.post('/api/get_file')
+    async def api_get_file (
+            UUID: Annotated[str, Form(...)]
+    ):
+        uuid_dict = json.loads(UUID)
+        uuid = uuid_dict['UUID']
+        print(uuid_dict)
+        print(uuid)
+        url = f'http://host.docker.internal:8090/api/get/{uuid}'
+        r = requests.get(url)
+        retdict = r.json()
+        print(retdict)
+        if (retdict['code'] == 0):
+            return {'code': 0, 'type': retdict['type'], 'file': retdict['file']}
+        else:
+            return {'code': 1, 'file': f'no file with uuid {uuid}'}
 
     @app.post('/api/point')
     async def api_points(

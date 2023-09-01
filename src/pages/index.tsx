@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import React, { useState, useEffect, useRef } from 'react'
+import React, {useState, useEffect, useRef} from 'react'
 import CreatableSelect from 'react-select/creatable';
 import { InteractiveSegment, Point, Mask, Data, }
   from '../components/interactive_segment'
@@ -25,8 +25,24 @@ function Popup(text: string, timeout: number = 1000) {
   }, timeout)
 }
 
+function PageLoad() {
+  return null;
+}
+
+function url_to_file(dataurl : any, filename : any) {
+  var arr = dataurl.split(','),
+      mime = arr[0].match(/:(.*?);/)[1],
+      bstr = atob(arr[arr.length - 1]),
+      n = bstr.length,
+      u8arr = new Uint8Array(n);
+  while(n--){
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new File([u8arr], filename, {type:mime});
+}
+
 function Workspace() {
-  const [data, setData] = useState<Data | null>(null)
+  const [data, setData] = useState<Data | null>(null) // We can set this with the API to change the displayed image?
   const [mode, setMode] = useState<'click' | 'box' | 'everything'>('click')
   const [points, setPoints] = useState<Point[]>([])
   const [masks, setMasks] = useState<Mask[]>([])
@@ -35,11 +51,64 @@ function Workspace() {
   const [processing, setProcessing] = useState<boolean>(false)
   const [ready, setBoxReady] = useState<boolean>(false)
   const controller = useRef<AbortController | null>()
-  const [filename, setFilename] = useState('');
-  const [imgx, setImageX] = useState('');
-  const [imgy, setImageY] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isAPIAccessed, setAPIAccessed] = useState(false);
+  const [filename, setFilename] = useState('')
+  const [imgx, setImageX] = useState('')
+  const [imgy, setImageY] = useState('')
+  const [img_loaded, setImageLoaded] = useState<boolean>(false)
+
+
+  // Checks the display API for a file
+  useEffect(() => {
+    if (img_loaded) return
+
+    // Get the parameter passed in the URL so that we can request the file for display
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      let uuid = params.get('uuid')
+      if (uuid !== null) {
+        uuid = uuid.replace(/ /g, '+')
+        setFilename(uuid)
+        console.log('uuid:' + uuid)
+
+        const fromData = new FormData()
+        fromData.append('UUID', JSON.stringify({UUID: uuid}))
+
+        // Get the image from the database
+        fetch('/sam/api/get_file', {
+          method: 'POST',
+          body: fromData,
+          signal: controller.current?.signal
+        }).then((res) => {
+          return res.json()
+        }).then((res) => {
+          if (res.code == 0) {
+            setImageLoaded(true)
+            const file_data = res.file
+            const type = res.type
+            const img = new Image()
+            const file = url_to_file(`data:${type};base64,` + file_data, uuid)
+            console.log(file)
+            img.src = URL.createObjectURL(file)
+            console.log(img.width)
+            console.log(img.height)
+            img.onload = () => {
+              setImageX(img.width.toString())
+              setImageY(img.height.toString())
+              setData({
+                width: img.width,
+                height: img.height,
+                file,
+                img,
+              })
+            }
+          }
+          else {
+            alert(`File with uuid ${uuid} not found in database.`)
+          }
+        })
+      }
+    }
+  })
 
   // Handles all the point functions
   useEffect(() => {
@@ -191,7 +260,7 @@ function Workspace() {
       filename: filename
     }))
     fromData.append('overlay_filename', JSON.stringify({
-      filename: filename.split('.')[0]+"_overlay.jpg"
+      filename: filename.split('.')[0]+"+overlay.jpg"
     }))
     fromData.append('imgx', JSON.stringify({
           x_dim: imgx
@@ -200,7 +269,7 @@ function Workspace() {
           y_dim: imgy
     }))
     fromData.append('points_filename', JSON.stringify({
-      filename: filename.split('.')[0]+"_points.json"
+      filename: filename.split('.')[0]+"+points.json"
     }))
     const points_list = points.map((p) => {
         return {
@@ -226,47 +295,6 @@ function Workspace() {
     }).then((res) => {
       if (res.code == 0) {
         alert('Image Overlay downloaded to server.')
-      }
-    })
-  }
-
-  //Contains methods to accept the point JSON output and convert it to rendered points and
-  //segmentations on screen
-  const handleCopyPaste = () => {
-    if (json_prompt === '' || !data) return
-    const fromData = new FormData()
-
-    const obj = JSON.parse(json_prompt)
-
-    setPoints(obj.points)
-
-    const points_list = points.map((p) => {
-      return {
-        x: Math.round(p.x),
-        y: Math.round(p.y)
-      }
-    })
-    const points_labels = points.map((p) => p.label)
-
-    fromData.append('file', new File([data.file], 'image.png'))
-    fromData.append('points', JSON.stringify({ points: points_list, points_labels }))
-    controller.current?.abort()
-    controller.current = new AbortController()
-    setProcessing(true)
-    fetch('/sam/api/copy-paste', {
-      method: 'POST',
-      body: fromData,
-      signal: controller.current?.signal
-    }).then((res) => {
-      setProcessing(false)
-      return res.json()
-    }).then((res) => {
-      if (res.code == 0) {
-       //window.open(res.data.url, '_blank');
-        /*const maskData = res.data.map((mask: any) => {
-          return mask
-        })
-        setMasks(maskData)*/
       }
     })
   }
@@ -476,12 +504,12 @@ function Workspace() {
         </div>
       </section >
       {
-        data ?
+        (data && img_loaded ?
           (<div className="flex flex-1 flex-col max-w-[1080px] m-auto my-2 md:px-12 md:py-9" >
             <InteractiveSegment
               data={data} mode={mode} processing={processing}
               points={points} setPoints={setPoints} masks={masks}
-              ready={ready} setBoxReady={setBoxReady}  basePath={'/sam'}/>
+              ready={ready} setBoxReady={setBoxReady} basePath={'/sam'}/>
             {processing && (
               <div className=" left-0 w-full flex items-center bg-black bg-opacity-50">
                 <div className="flex flex-col items-center justify-center w-full h-full">
@@ -496,10 +524,9 @@ function Workspace() {
               </div>
             )
             }
-          </div >) :
-          (<div
-            className="flex flex-1 flex-col max-w-[1080px] m-auto my-2 md:px-12 md:py-9"
-          >
+          </div>) :
+            (
+                <div className="flex flex-1 flex-col max-w-[1080px] m-auto my-2 md:px-12 md:py-9">
             <div
               className={
                 "flex flex-col items-center justify-center w-full h-96 border-2 border-dashed border-gray-400 rounded-lg " +
@@ -513,8 +540,8 @@ function Workspace() {
                 e.preventDefault()
                 const file = e.dataTransfer.files[0]
                 if (file) {
-                  setFilename(file.name)
-                  console.log(file.name)
+                  setImageLoaded(true)
+                  setFilename(file.name.replace(/ /g, '+'))
                   const img = new Image()
                   img.src = URL.createObjectURL(file)
                   img.onload = () => {
@@ -541,8 +568,7 @@ function Workspace() {
                   input.onchange = (e) => {
                     const file = (e.target as HTMLInputElement).files?.[0]
                     if (file) {
-                      setFilename(file.name)
-                      console.log(file.name)
+                      setFilename(file.name.replace(/ /g, '+'))
                       const img = new Image()
                       img.src = URL.createObjectURL(file)
                       img.onload = () => {
@@ -563,7 +589,7 @@ function Workspace() {
                 Upload a file
               </button>
             </div>
-          </div>)
+          </div>))
       }
       <section className="hidden w-full absolute bottom-0 max-md:inline-block">
         <div className='transition-all m-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200'>

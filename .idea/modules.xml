@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/IBI-segment-anything-webui.iml" filepath="$PROJECT_DIR$/.idea/IBI-segment-anything-webui.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../Sturdy-SAM/.idea/Sturdy-SAM.iml" filepath="$PROJECT_DIR$/../Sturdy-SAM/.idea/Sturdy-SAM.iml" />
     </modules>
   </component>
 </project>
