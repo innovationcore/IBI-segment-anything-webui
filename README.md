@@ -1,65 +1,36 @@
-# Segment Anything web UI
+# Web Sam for UKHC
 
-![demo](./assets/demo.gif)
+<p>WebSAM for UKHC is a three part package:</p>
 
-This is a web interface for the [Segment Anything](https://github.com/facebookresearch/segment-anything).
+[WebSAM for UKHC Repository](https://github.com/innovationcore/WebSAM-for-UKHC)
 
-## Usage
+<p>WebSAM for UKHC leverages Segment Anything to provide in-browser image segmentations.
+It consists of a ReactJS frontend, and a FastAPI python backend which contains API functions for saving and loading images, generating segmentation masks, and uploading JSON files with points to replicate results.</p>
 
-**Environment Require:**
-Python >= 3.8.13, Node >= 18.15.0 (LTS), CUDA(optional)
+<p>To create a segmentation, all you have to do is upload a file, click, and then when done clicking you can save the image to the database. Additionally, the threshold slider allows you to tweak segmentation around the click points.</p>
 
-1. Fowllow the instructions in the [Segment Anything](https://github.com/facebookresearch/segment-anything) and [CLIP](https://github.com/openai/CLIP) to install SAM and CLIP. And prepare webui environment:
+## Interactive parts of this site include:
+|Item|Function|
+|--------|:---------|
+|Click| this allows for you to place points on an image that generate a mask|
+|Box| this allows you to drag a box over an area of interest to generate a mask|
+|Everything| this is an "automatic" segmenter which takes the onus of placing points off the user|
+|Send Query| this button and it's text box allows you to use CLIP from OpenAI to write a query to segment something from the image|
+|Upload Points JSON File| this button allows you to select a .json file which contains the properly formatted points to recreate a previous segmentation (or you could make one up)|
+|Clean Segment| get rid of all segmentations and points, leave the uploaded image|
+|Clean All| remove everything, basically refreshes the page|
+|Undo Last Point| will remove the latest point from the image and re-run the segmentation|
 
-```shell
-# e.g. for Segment Anything
-pip install git+https://github.com/facebookresearch/segment-anything.git
-pip install opencv-python pycocotools matplotlib onnxruntime onnx
+<p>There is a tab which only shows up when an image is uploaded and the first point has been placed. The button is Download Results which allows you to download the file, generate and save a mask file, and save a json file with the points used to create the segmentation to the WebSAM Image Database.</p>
 
-mkdir model
-# download the model to `model/`
-wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth -O model/sam_vit_b_01ec64.pth
-# https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth
-# https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
+# Sturdy Waddle
+[Sturdy Waddle Repository](https://github.com/innovationcore/sturdy-waddle)
 
-# e.g. for CLIP
-pip install pytorch torchvision
-pip install ftfy regex tqdm
-pip install git+https://github.com/openai/CLIP.git
+<p>Sturdy Waddle is a fork of the template site. It has been modified to have a page which features the WebSAM interface, and a page which shows the files which are stored in the database. Minimal changes have been made from the original template site.</p>
 
-# python server as backend
-pip3 install torch numpy 'uvicorn[standard]' fastapi pydantic python-multipart Pillow click
-# or 
-cd script && pip3 install -r requirements.txt
-# webui frontend
-npm i
-```
+# WebSAM Image Database
+[WebSAM Image Database Repository](https://github.com/innovationcore/WebSAM-Image-Database)
 
-2. run the server and webui on different terminals:
+<p>WebSAM Image Database contains code to save images that are downloaded frm WebSAM-for-UKHC, as well as to provide identifying information and thumbnails for the images to be placed in the processed tab of sturdy-waddle.</p>
 
-```bash
-python3 scripts/server.py   # webui backend
-npm run dev                 # interactive webui frontend
-```
-
-## Advanced
-
-Change the `.env.local` file to change the server address.
-
-The model server can be run on a remote GUI server, and the webui can be run on a local machine.
-
-The API in `server.py` is **Pure Function**. Though it is slow (Encoding Image Each Request), it is easy to deploy and maintain.
-
-## TODO
-- [ ] Pre extract image features
-- [ ] Frontend onnx inference
-- [x] Add CLIP for text Prompt
-- [x] Better compress for mask matrix
-
-## Reference
-
-- [Segment Anything | Meta AI](https://segment-anything.com/)
-- [facebookresearch/segment-anything: The repository provides code for running inference with the SegmentAnything Model (SAM), links for downloading the trained model checkpoints, and example notebooks that show how to use the model.](https://github.com/facebookresearch/segment-anything)
-
-## License
-MIT
+<p>This is not an interactive site, it is simply a stand-in for a database implementation down the road. For now, it creates and saves files to a folder called datasets.</p>
