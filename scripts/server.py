@@ -85,7 +85,9 @@ def main(
         host="0.0.0.0",
 ):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print("device:", device)
+    print('Torch Version: ', torch.version.cuda)
+    print("device count: ", torch.cuda.device_count())
+    print("device: ", device)
 
     build_sam = sam_model_registry[model]
     model = build_sam(checkpoint=model_path).to(device)
