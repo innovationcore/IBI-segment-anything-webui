@@ -23,7 +23,7 @@ export default async function handler(
     res: NextApiResponse<Response>
 ) {
     fs.mkdir('./tmp/', { recursive: true })
-    const form = formidable({ uploadDir: './tmp/', maxTotalFileSize: 2048 * 2048 })
+    const form = formidable({ uploadDir: './tmp/', /*maxTotalFileSize: 2048 * 2048 */})
     const { fields } =
         await new Promise<{ fields: formidable.Fields}>((resolve, reject) => {
             form.parse(req, async function (err, fields, files) {
@@ -36,6 +36,7 @@ export default async function handler(
         });
     const req_data = new FormData();
     req_data.append('UUID', fields['UUID'] as string);
+    console.log(req_data);
     const res_data = await fetch(
         utils.config.API_URL + '/api/get_file',
         {

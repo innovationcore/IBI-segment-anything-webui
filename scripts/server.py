@@ -363,19 +363,21 @@ def main(
         return {"code": 0, "data": masks[:]}
 
     @app.post("/api/dicom-to-png")
-    async def convert_dicom(file: UploadFile = File(...)):
+    async def convert_dicom(
+            file: Annotated[bytes, File()],
+            filename: Annotated[str, Form(...)],
+    ):
         if not file:
             raise HTTPException(status_code=400, detail="No file part")
 
-        if file.filename == '':
+        if filename == '':
             raise HTTPException(status_code=400, detail="No selected file")
 
-        original_filename = file.filename
-        base_filename = os.path.splitext(original_filename)[0]
+        base_filename = os.path.splitext(filename)[0]
 
         try:
             # Read the DICOM file using SimpleITK
-            dicom_image = sitk.ReadImage(file.file)
+            dicom_image = sitk.ReadImage(Image.frombytes(file))
 
             # Convert DICOM to numpy array
             image_array = sitk.GetArrayFromImage(dicom_image)[0]

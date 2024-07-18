@@ -31,16 +31,10 @@ export default async function handler(
     const filepath = file_list[0]['filepath']
     const readStream = await fs.readFile(filepath)
     const req_data = new FormData()
-    req_data.append('file', new Blob([readStream]), 'image')
-    req_data.append('filename', fields['filename'] as string)
-    req_data.append('overlay_filename', fields['overlay_filename'] as string)
-    req_data.append('imgx', fields['imgx'] as string)
-    req_data.append('imgy', fields['imgy'] as string)
-    req_data.append('points_filename', fields['points_filename'] as string)
-    req_data.append('points', fields['points'] as string)
+    req_data.append('file', new Blob([readStream]), fields['filename'] as string)
 
     const res_data = await fetch(
-        utils.config.API_URL + '/api/download', {
+        utils.config.API_URL + '/api/dicom-to-png', {
             method: 'POST',
             body: req_data,
         }

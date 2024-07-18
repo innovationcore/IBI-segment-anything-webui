@@ -3,7 +3,7 @@ import React, {useState, useEffect, useRef} from 'react'
 import CreatableSelect from 'react-select/creatable';
 import { InteractiveSegment, Point, Mask, Data, }
   from '../components/interactive_segment'
-
+import * as utils from '@/utils';
 const uiBasiclClassName = 'transition-all my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 ';
 const uiActiveClassName = 'bg-blue-500 text-white';
 const uiInactiveClassName = 'bg-white text-gray-400';
@@ -372,30 +372,72 @@ function Workspace() {
   }
 
   const handleDicomImage = () => {
-    setImageLoaded(true)
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = 'dcm,image/*'
+    setImageLoaded(true);
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*, .dcm, .dicom';
+
     input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
+      const file = (e.target as HTMLInputElement).files?.[0];
+
       if (file) {
-        setFilename(file.name.replace(/ /g, '+'))
-        const img = new Image()
-        img.src = URL.createObjectURL(file)
-        img.onload = () => {
-          setImageX(img.width.toString())
-          setImageY(img.height.toString())
-          setData({
-            width: img.width,
-            height: img.height,
-            file,
-            img,
+        //console.log(file);
+        setFilename(file.name.replace(/ /g, '+'));
+
+        // Check if the file is a DICOM file based on its extension
+        // @ts-ignore
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        const isDicom = fileExtension === 'dcm' || fileExtension === 'dicom';
+
+        if (isDicom) {
+          // Push the file to the API endpoint
+          const formData = new FormData();
+          formData.append('file', file);
+
+          fetch('/sam/api/dicom-to-png', {
+            method: 'POST',
+            body: formData,
           })
+          .then(response => response.json())
+          .then(data => {
+            console.log('Success:', data);
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+            img.onload = () => {
+              setImageX(img.width.toString());
+              setImageY(img.height.toString());
+              setData({
+                width: img.width,
+                height: img.height,
+                file,
+                img,
+              });
+            };
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+          });
+        } else {
+          // Handle image preview for non-DICOM files
+          const img = new Image();
+          img.src = URL.createObjectURL(file);
+          img.onload = () => {
+            setImageX(img.width.toString());
+            setImageY(img.height.toString());
+            setData({
+              width: img.width,
+              height: img.height,
+              file,
+              img,
+            });
+          };
         }
       }
-    }
-    input.click()
-  }
+    };
+
+    input.click();
+  };
+
 
   return (
     <div className="flex items-stretch justify-center flex-1 stage min-h-fit">
