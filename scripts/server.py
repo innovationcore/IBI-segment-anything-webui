@@ -3,7 +3,11 @@ import base64
 import requests
 
 import io
+from io import BytesIO
 import json
+import os
+import SimpleITK as sitk
+import requests
 
 import click
 import torch
@@ -12,8 +16,8 @@ import uvicorn
 import clip #ensure you are installing the CLIP.git not the clip package
 import re
 
-from fastapi import FastAPI, File, Form, UploadFile
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Sequence, Callable
 from segment_anything import SamPredictor, SamAutomaticMaskGenerator, sam_model_registry
@@ -357,6 +361,43 @@ def main(
         for mask in masks:
             mask['segmentation'] = compress_mask(mask['segmentation'])
         return {"code": 0, "data": masks[:]}
+
+    @app.post("/api/dicom-to-png")
+    async def convert_dicom(file: UploadFile = File(...)):
+        if not file:
+            raise HTTPException(status_code=400, detail="No file part")
+
+        if file.filename == '':
+            raise HTTPException(status_code=400, detail="No selected file")
+
+        original_filename = file.filename
+        base_filename = os.path.splitext(original_filename)[0]
+
+        try:
+            # Read the DICOM file using SimpleITK
+            dicom_image = sitk.ReadImage(file.file)
+
+            # Convert DICOM to numpy array
+            image_array = sitk.GetArrayFromImage(dicom_image)[0]
+
+            # Normalize the image array to the range [0, 255]
+            image_array = (
+                        255 * (image_array - np.min(image_array)) / (np.max(image_array) - np.min(image_array))).astype(
+                np.uint8)
+
+            # Create a PIL image
+            image = Image.fromarray(image_array)
+
+            # Save the image to a BytesIO object
+            image_io = BytesIO()
+            image.save(image_io, format='PNG')
+            image_io.seek(0)
+
+            # Return the image as a streaming response
+            headers = {'X-Original-Filename': original_filename}
+            return StreamingResponse(image_io, media_type="image/png", headers=headers)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
     uvicorn.run(app, host=host, port=port)
 

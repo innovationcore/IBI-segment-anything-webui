@@ -371,6 +371,32 @@ function Workspace() {
     })
   }
 
+  const handleDicomImage = () => {
+    setImageLoaded(true)
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'dcm,image/*'
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (file) {
+        setFilename(file.name.replace(/ /g, '+'))
+        const img = new Image()
+        img.src = URL.createObjectURL(file)
+        img.onload = () => {
+          setImageX(img.width.toString())
+          setImageY(img.height.toString())
+          setData({
+            width: img.width,
+            height: img.height,
+            file,
+            img,
+          })
+        }
+      }
+    }
+    input.click()
+  }
+
   return (
     <div className="flex items-stretch justify-center flex-1 stage min-h-fit">
       <section className="flex-col hidden min-w-[225px] w-1/5 py-5 overflow-y-auto md:flex lg:w-72">
@@ -561,33 +587,9 @@ function Workspace() {
               <p className="text-sm text-gray-400">or</p>
               <button //this would be a good place to put an image converter that changes DICOM to png. This can be done using pngjs
                 className="transition-all false max-h-[40px] my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 false false"
-                onClick={() => {
-                  setImageLoaded(true)
-                  const input = document.createElement('input')
-                  input.type = 'file'
-                  input.accept = 'image/*'
-                  input.onchange = (e) => {
-                    const file = (e.target as HTMLInputElement).files?.[0]
-                    if (file) {
-                      setFilename(file.name.replace(/ /g, '+'))
-                      const img = new Image()
-                      img.src = URL.createObjectURL(file)
-                      img.onload = () => {
-                        setImageX(img.width.toString())
-                        setImageY(img.height.toString())
-                        setData({
-                          width: img.width,
-                          height: img.height,
-                          file,
-                          img,
-                        })
-                      }
-                    }
-                  }
-                  input.click()
-                }}
+                onClick={handleDicomImage}
               >
-                Upload a file
+                Upload a DICOM or Image
               </button>
             </div>
           </div>))
