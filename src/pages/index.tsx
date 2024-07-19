@@ -258,10 +258,10 @@ function Workspace() {
     const fromData = new FormData()
     fromData.append('file', new File([data.file], 'image.png'))
     fromData.append('filename', JSON.stringify({
-      filename: filename
+      filename: filename.split('.')[0]+Date.now().toString()+filename.split('.')[1]
     }))
     fromData.append('overlay_filename', JSON.stringify({
-      filename: filename.split('.')[0]+"+overlay.jpg"
+      filename: filename.split('.')[0]+Date.now().toString()+"+overlay.jpg"
     }))
     fromData.append('imgx', JSON.stringify({
           x_dim: imgx
@@ -270,7 +270,7 @@ function Workspace() {
           y_dim: imgy
     }))
     fromData.append('points_filename', JSON.stringify({
-      filename: filename.split('.')[0]+"+points.json"
+      filename: filename.split('.')[0]+Date.now().toString()+"+points.json"
     }))
     const points_list = points.map((p) => {
         return {

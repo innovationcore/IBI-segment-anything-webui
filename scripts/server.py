@@ -209,23 +209,22 @@ def main(
         overlay = generate_overlay(compress_mask(np.array(masks[2])), int(x_dict['x_dim']), int(y_dict['y_dim']),
                                    of_dict['filename'])
 
+        timestamp = str(datetime.datetime.now())
+
         # Store the JSON file which replicates the segmentation
         payload = {
-            'points_filename': json.loads(points_filename)['filename'].split('.')[0]
-            + str(datetime.datetime.now()) + json.loads(overlay_filename)['filename'].split('.')[1],
+            'points_filename': json.loads(points_filename)['filename'],
             'points': json.loads(points),
         }
         print(payload)
         pr = requests.post(url=point_storage_url, json=payload)
 
         # Store the Image we segmented
-        image = {"file": (json.loads(filename)['filename'].split('.')[0] + str(datetime.datetime.now())
-                          + json.loads(filename)['filename'].split('.')[1], file, 'image/jpeg')}
+        image = {"file": (json.loads(filename)['filename'], file, 'image/jpeg')}
         ir = requests.post(url=img_storage_url, files=image)
 
         # Store the Overlay we created from the segmentation
-        ovr_image = {"file": (json.loads(overlay_filename)['filename'].split('.')[0] + str(datetime.datetime.now())
-                              + json.loads(overlay_filename)['filename'].split('.')[1], overlay, 'image/jpeg')}
+        ovr_image = {"file": (json.loads(overlay_filename)['filename'], overlay, 'image/jpeg')}
         ovr = requests.post(url=ovr_storage_url, files=ovr_image)
 
         return {"code": 0, "Points Response": pr.text, "Image Response": ir.text,
