@@ -1,5 +1,7 @@
 import base64
+import datetime
 
+import pydicom
 import requests
 
 import io
@@ -13,7 +15,7 @@ import click
 import torch
 import numpy as np
 import uvicorn
-import clip #ensure you are installing the CLIP.git not the clip package
+import clip  #ensure you are installing the CLIP.git not the clip package
 import re
 
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
@@ -24,7 +26,6 @@ from segment_anything import SamPredictor, SamAutomaticMaskGenerator, sam_model_
 from PIL import Image
 from typing_extensions import Annotated
 from threading import Lock
-
 
 
 class Point(BaseModel):
@@ -55,10 +56,10 @@ def segment_image(image_array: np.ndarray, segmentation_mask: np.ndarray):
 
 
 def retrieve(
-    elements: Sequence[np.ndarray],
-    search_text: str,
-    preprocess: Callable[[Image.Image], torch.Tensor],
-    model, device=torch.device('cpu')
+        elements: Sequence[np.ndarray],
+        search_text: str,
+        preprocess: Callable[[Image.Image], torch.Tensor],
+        model, device=torch.device('cpu')
 ) -> torch.Tensor:
     with torch.no_grad():
         preprocessed_images = [preprocess(Image.fromarray(
@@ -71,6 +72,7 @@ def retrieve(
         text_features /= text_features.norm(dim=-1, keepdim=True)
         probs = (100.0 * image_features @ text_features.T)
     return probs[:, 0].softmax(dim=-1)
+
 
 # Here we can change the used model, so as we create our own or if we wish to switch to one of the other three models,
 # this is where we can do it.
@@ -154,18 +156,20 @@ def main(
     @app.post('/api/upload')
     async def api_open(
             uuid: Annotated[str, Form(...)],
-            file: Annotated[bytes, File()], # not sure how this might work yet, but if we need to pull the image from somewhere else, we can push the bytes of the file and reconstruct on the frontend, reverse of how it's done right now
+            file: Annotated[bytes, File()],
+            # not sure how this might work yet, but if we need to pull the image from somewhere else, we can push the bytes of the file and reconstruct on the frontend, reverse of how it's done right now
     ):
-        return {"code": 0, "data": [uuid, file]} # returns the filename of the file we want to upload
+        return {"code": 0, "data": [uuid, file]}  # returns the filename of the file we want to upload
 
     # Gets the UUIDs in the php site and sends it to the react frontend to allow choosing predefined files
     @app.post('/api/populate')
     async def api_populate(
-        filenames: Annotated[str, Form(...)]
+            filenames: Annotated[str, Form(...)]
     ):
         available_files = json.loads(filenames)
 
-        return {"code": 0, "data": available_files["filenames"]} # returns a list of filenames which function as UUIDs corresponding to available checkpoints on the php side
+        return {"code": 0, "data": available_files[
+            "filenames"]}  # returns a list of filenames which function as UUIDs corresponding to available checkpoints on the php side
 
     # Downloads image, points, and overlay to the database
     @app.post('/api/download')
@@ -197,30 +201,35 @@ def main(
 
         of_dict = json.loads(overlay_filename)
 
-        # These two links will have to be updated later when they are made public
+        # These three links will have to be updated later when they are made public
         point_storage_url = "http://localhost:8090/api/save_json"
         img_storage_url = "http://localhost:8090/api/save_image"
         ovr_storage_url = "http://localhost:8090/api/save_overlay"
 
-        overlay = generate_overlay(compress_mask(np.array(masks[2])), int(x_dict['x_dim']), int(y_dict['y_dim']), of_dict['filename'])
+        overlay = generate_overlay(compress_mask(np.array(masks[2])), int(x_dict['x_dim']), int(y_dict['y_dim']),
+                                   of_dict['filename'])
 
         # Store the JSON file which replicates the segmentation
         payload = {
-            'points_filename': json.loads(points_filename)['filename'],
+            'points_filename': json.loads(points_filename)['filename'].split('.')[0]
+            + str(datetime.datetime.now()) + json.loads(overlay_filename)['filename'].split('.')[1],
             'points': json.loads(points),
         }
         print(payload)
         pr = requests.post(url=point_storage_url, json=payload)
 
         # Store the Image we segmented
-        image = {"file": (json.loads(filename)['filename'], file, 'image/jpeg')}
+        image = {"file": (json.loads(filename)['filename'].split('.')[0] + str(datetime.datetime.now())
+                          + json.loads(filename)['filename'].split('.')[1], file, 'image/jpeg')}
         ir = requests.post(url=img_storage_url, files=image)
 
         # Store the Overlay we created from the segmentation
-        ovr_image = {"file": (json.loads(overlay_filename)['filename'], overlay, 'image/jpeg')}
+        ovr_image = {"file": (json.loads(overlay_filename)['filename'].split('.')[0] + str(datetime.datetime.now())
+                              + json.loads(overlay_filename)['filename'].split('.')[1], overlay, 'image/jpeg')}
         ovr = requests.post(url=ovr_storage_url, files=ovr_image)
 
-        return {"code": 0, "Points Response": pr.text, "Image Response": ir.text, 'Overlay Response': ovr.text} # r.json() is the response we get from requests.post(), so this can give us nice error messages and whatever else
+        return {"code": 0, "Points Response": pr.text, "Image Response": ir.text,
+                'Overlay Response': ovr.text}  # r.json() is the response we get from requests.post(), so this can give us nice error messages and whatever else
 
     # Inserts points sent here in the form of a valid JSON object which is produced by the frontend
     @app.post('/api/copy-paste')
@@ -254,7 +263,7 @@ def main(
         return {"code": 0, "data": masks[:]}
 
     @app.post('/api/get_file')
-    async def api_get_file (
+    async def api_get_file(
             UUID: Annotated[str, Form(...)]
     ):
         uuid_dict = json.loads(UUID)
@@ -302,8 +311,8 @@ def main(
 
     @app.post('/api/box')
     async def api_box(
-        file: Annotated[bytes, File()],
-        box: Annotated[str, Form(...)],
+            file: Annotated[bytes, File()],
+            box: Annotated[str, Form(...)],
     ):
         b = Box.parse_raw(box)
         input_box = np.array([b.x1, b.y1, b.x2, b.y2])
@@ -353,7 +362,7 @@ def main(
         for mask in masks:
             bobx = [int(x) for x in mask['bbox']]
             cropped_boxes.append(segment_image(image_array, mask["segmentation"])[
-                bobx[1]:bobx[1] + bobx[3], bobx[0]:bobx[0] + bobx[2]])
+                                 bobx[1]:bobx[1] + bobx[3], bobx[0]:bobx[0] + bobx[2]])
         scores = retrieve(cropped_boxes, text_prompt.text,
                           model=clip_model, preprocess=preprocess, device=device)
         top = scores.topk(5)
@@ -366,6 +375,7 @@ def main(
     async def convert_dicom(
             file: Annotated[bytes, File()],
             filename: Annotated[str, Form(...)],
+            filepath: Annotated[str, Form(...)],
     ):
         if not file:
             raise HTTPException(status_code=400, detail="No file part")
@@ -373,19 +383,30 @@ def main(
         if filename == '':
             raise HTTPException(status_code=400, detail="No selected file")
 
-        base_filename = os.path.splitext(filename)[0]
-
         try:
-            # Read the DICOM file using SimpleITK
-            dicom_image = sitk.ReadImage(Image.frombytes(file))
+            print(filename)
+            #print(file)
+
+            dcm_bytes = BytesIO(file)
+            dcm = pydicom.dcmread(dcm_bytes, force=True)  # read bytes back into file
+
+            # Extract pixel data
+            pixel_array = dcm.pixel_array
+
+            # Create a SimpleITK image from the pixel data
+            dicom_image = sitk.GetImageFromArray(pixel_array)
+
+            # Optionally, set the origin, spacing, and direction if available
+            if 'PixelSpacing' in dcm:
+                spacing = [float(sp) for sp in dcm.PixelSpacing]
+                dicom_image.SetSpacing(spacing)
 
             # Convert DICOM to numpy array
             image_array = sitk.GetArrayFromImage(dicom_image)[0]
 
             # Normalize the image array to the range [0, 255]
-            image_array = (
-                        255 * (image_array - np.min(image_array)) / (np.max(image_array) - np.min(image_array))).astype(
-                np.uint8)
+            image_array = (255 * (image_array - np.min(image_array))
+                           / (np.max(image_array) - np.min(image_array))).astype(np.uint8)
 
             # Create a PIL image
             image = Image.fromarray(image_array)
@@ -395,8 +416,10 @@ def main(
             image.save(image_io, format='PNG')
             image_io.seek(0)
 
+            Image.open(image_io).show()
+
             # Return the image as a streaming response
-            headers = {'X-Original-Filename': original_filename}
+            headers = {'X-Original-Filename': filename}
             return StreamingResponse(image_io, media_type="image/png", headers=headers)
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))

@@ -4,6 +4,7 @@ import CreatableSelect from 'react-select/creatable';
 import { InteractiveSegment, Point, Mask, Data, }
   from '../components/interactive_segment'
 import * as utils from '@/utils';
+import { PNG } from 'pngjs/browser';
 const uiBasiclClassName = 'transition-all my-2 rounded-xl px-4 py-2 cursor-pointer outline outline-gray-200 ';
 const uiActiveClassName = 'bg-blue-500 text-white';
 const uiInactiveClassName = 'bg-white text-gray-400';
@@ -377,7 +378,7 @@ function Workspace() {
     input.type = 'file';
     input.accept = 'image/*, .dcm, .dicom';
 
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
 
       if (file) {
@@ -394,29 +395,27 @@ function Workspace() {
           const formData = new FormData();
           formData.append('file', file);
 
-          fetch('/sam/api/dicom-to-png', {
+          const response = await fetch('/sam/api/dicom-to-png', {
             method: 'POST',
             body: formData,
-          })
-          .then(response => response.json())
-          .then(data => {
-            console.log('Success:', data);
-            const img = new Image();
-            img.src = URL.createObjectURL(file);
-            img.onload = () => {
-              setImageX(img.width.toString());
-              setImageY(img.height.toString());
-              setData({
-                width: img.width,
-                height: img.height,
-                file,
-                img,
-              });
-            };
-          })
-          .catch((error) => {
-            console.error('Error:', error);
           });
+
+          const blob = await response.blob();
+          console.log(blob);
+          const img = new Image();
+          const url = URL.createObjectURL(blob);
+           img.src = url;
+          img.onload = () => {
+            URL.revokeObjectURL(url)
+            setImageX(img.width.toString());
+            setImageY(img.height.toString());
+            setData({
+              width: img.width,
+              height: img.height,
+              file,
+              img,
+            })
+          }
         } else {
           // Handle image preview for non-DICOM files
           const img = new Image();

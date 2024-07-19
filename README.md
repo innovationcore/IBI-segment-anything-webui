@@ -9,6 +9,8 @@ It consists of a ReactJS frontend, and a FastAPI python backend which contains A
 
 <p>To create a segmentation, all you have to do is upload a file, click, and then when done clicking you can save the image to the database. Additionally, the threshold slider allows you to tweak segmentation around the click points.</p>
 
+after running npm install, you need to cd into the /node_modules/pngjs and run `npm run browserify`
+
 ## Interactive parts of this site include:
 |Item|Function|
 |--------|:---------|
