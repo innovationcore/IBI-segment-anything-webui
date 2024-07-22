@@ -220,7 +220,7 @@ def main(
         pr = requests.post(url=point_storage_url, json=payload)
 
         # Store the Image we segmented
-        image = {"file": (json.loads(filename)['filename'], file, 'image/jpeg')}
+        image = {"file": (json.loads(filename)['filename'], file, 'image/*')}
         ir = requests.post(url=img_storage_url, files=image)
 
         # Store the Overlay we created from the segmentation
